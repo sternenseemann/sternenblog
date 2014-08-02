@@ -9,3 +9,6 @@ sternenblog is a blogging engine written in C intended to work with [CGI](de.wik
 
 ## writing templates
 See [template.h](./template.h) and [simple.c](./templates/simple.c).
+
+## Is it anyhow useful?
+Oh yes. And it will take you to the stars!

@@ -9,9 +9,24 @@
 #include <sys/types.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
 #include "template.h"
+#include "config.h"
 
-#define BLOGDIR "./posts"
+
+struct blogpost {
+	time_t timestamp;
+	char *path;
+	char *link;
+};
+
+/* returns a blogpost struct
+ * for a path */
+struct blogpost make_blogpost(char path[]);
+
+/* constructs a path from a dirent
+ * and calls make_blogpost */
+struct blogpost make_blogpost_from_dirent(struct dirent *file);
 
 /* generates the template
  * for the index page */
@@ -21,6 +36,8 @@ void blog_index(void);
  * a single view of a blog post*/
 void blog_post(char post_path[]);
 
+/* generates the rss feed */
+void blog_rss(void);
 /* checks if a file exists
  * returns 0 if not
  * returns 1 if
@@ -44,16 +61,82 @@ int main(void) {
 	
 	if(path_info == NULL || path_info[0] == '\0' || strcmp(path_info, "/") == 0) {
 		blog_index();
+	} else if(strcmp(path_info, "/rss.xml") == 0) {
+		blog_rss();
 	} else {
-		unsigned long bufsize = strlen(BLOGDIR) + strlen(path_info);
+		unsigned long bufsize = strlen(BLOG_DIR) + strlen(path_info);
 		char post_path[bufsize];
-		strcpy(post_path, BLOGDIR);
+		strcpy(post_path, BLOG_DIR);
 		strcat(post_path, path_info);
 
 		blog_post(post_path);
 	}
 
 	return EXIT_SUCCESS;
+}
+
+/**************************
+ * functions for dealing
+ * with struct blogpost's
+ *************************/
+
+struct blogpost make_blogpost(char path[]) {
+	struct tm blog_tm;
+
+	struct blogpost struct_to_return;
+
+
+	
+	/* find the last '/' to
+	 * get 2014-12-12-12-12-lala
+	 * from /path/to/2014-12-12-12-12-lala */
+
+	char *last_slash_position = strrchr(path, '/');
+	if(last_slash_position == NULL) {
+		fprintf(stderr, "WTF?!");
+		exit(EXIT_FAILURE);
+	}
+
+	/* this parses the filename that is linke
+	 * year-month-day-hour-minute-title */
+	strptime(last_slash_position + 1, "%Y-%m-%d-%H-%M", &blog_tm);
+
+	struct_to_return.timestamp = mktime(&blog_tm);
+	struct_to_return.path = malloc(strlen(path) * sizeof(char));
+	strcpy(struct_to_return.path, path);
+
+	/* let's build up the link */
+	char *script_name = getenv("SCRIPT_NAME");
+	if(script_name == NULL) {
+		fprintf(stderr, "Died because of missing self-awareness\n");
+		exit(EXIT_FAILURE);
+	}
+	int bufsize = strlen(script_name) +
+		strlen(last_slash_position) + 1;
+	struct_to_return.link = malloc(sizeof(char) * bufsize);
+	strcpy(struct_to_return.link, script_name);
+	strcat(struct_to_return.link, last_slash_position);
+
+	/* that's all */
+
+	return struct_to_return;
+}
+
+struct blogpost make_blogpost_from_dirent(struct dirent *post) {
+	int bufsize = strlen(BLOG_DIR) + 1 + strlen(post->d_name) + 1;
+	char buf[bufsize];
+
+	strcpy(buf, BLOG_DIR);
+	strcat(buf, "/");
+	strcat(buf, post->d_name);
+
+	return make_blogpost(buf);
+}
+
+void free_blogpost(struct blogpost to_free) {
+	free(to_free.path);
+	free(to_free.link);
+	/* the rest lies in stack mem */
 }
 
 /************************
@@ -76,20 +159,20 @@ void blog_index(void) {
 
 	template_header();
 
-	dircount = scandir(BLOGDIR, &dirlist, no_dotfiles, alphasort);	
+	dircount = scandir(BLOG_DIR, &dirlist, no_dotfiles, alphasort);	
 
 	if(dircount < 0) {
 		fprintf(stderr, "An error occurred while scanning %s: %s\n", 
-				BLOGDIR, strerror(errno));
+				BLOG_DIR, strerror(errno));
 		exit(EXIT_FAILURE);
 	} else {
 		while(dircount--) {
 			/* first create the path to the blogpost
 			 * which is passed to the template function */
-			unsigned long bufsize = strlen(BLOGDIR)
+			unsigned long bufsize = strlen(BLOG_DIR)
 				+ 1 + strlen(dirlist[dircount]->d_name);
 			char post_path[bufsize];
-			strcpy(post_path, BLOGDIR);
+			strcpy(post_path, BLOG_DIR);
 			strcat(post_path, "/");
 			strcat(post_path, dirlist[dircount]->d_name);
 		
@@ -135,6 +218,95 @@ void blog_post(char post_path[]) {
 	}
 
 	template_footer();
+}
+
+void blog_rss(void) {
+	struct dirent **dirlist;
+	int dircount;
+	
+	/* construct the time,
+	 * the blogpost was
+	 * created */
+	time_t timestamp;
+	struct tm *timeinfo;
+	char strtime_now[512];
+
+	time(&timestamp);
+	timeinfo = localtime(&timestamp);
+
+	strftime(strtime_now, sizeof strtime_now, "%a, %d %b %G %T %z", timeinfo);
+
+	
+	char *script_name = getenv("SCRIPT_NAME");
+	if(script_name == NULL) {
+		fprintf(stderr, "Died because of missing self-awareness\n");
+		exit(EXIT_FAILURE);
+	}
+
+	/* build the top part
+	 * of the rss-feed */
+	send_header("Content-type", "application/rss+xml");
+	terminate_headers();
+
+	printf("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+	       "<rss version=\"2.0\">\n"
+	       "<channel>\n"
+	       "\t<title>%s</title>\n"
+	       "\t<description>%s</description>\n"
+	       "\t<link>%s</link>\n"
+	       "\t<lastBuildDate>%s</lastBuildDate>\n"
+	       "\t<pubDate>%s</pubDate>\n"
+	       "\t<ttl>%d</ttl>\n",
+	       BLOG_TITLE, BLOG_DESCRIPTION, 
+	       script_name, strtime_now,
+	       strtime_now, BLOG_RSS_TTL);
+
+	dircount = scandir(BLOG_DIR, &dirlist, no_dotfiles, alphasort);
+
+	if(dircount < 0) {
+		fprintf(stderr, "An error occurred while scanning %s: %s\n",
+				BLOG_DIR, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
+	while(dircount--) {
+		struct blogpost post;
+		post = make_blogpost_from_dirent(dirlist[dircount]);
+		char *last_slash_position = strrchr(post.path, '/');
+
+		FILE *fp = fopen(post.path, "r");
+		if(fp == NULL) {
+			fprintf(stderr, "Could not open file: %s: %s\n",
+					post.path, strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		char c;
+
+		struct tm *timeinfo = localtime(&post.timestamp);
+		char strtime_post[512];
+		strftime(strtime_post, sizeof strtime_post, "%a, %d %b %G %T %z", timeinfo);
+		
+		printf("\t<item>\n"
+		       "\t\t<title>%s</title>\n"
+		       "\t\t<description><![CDATA[",
+		       last_slash_position + 1);
+
+		while((c = getc(fp)) != EOF) {
+			printf("%c", c);
+		}
+		       
+		printf("]]</description>\n"
+		       "\t\t<link>%s</link>\n"
+		       "\t\t<guid>%s</guid>\n"
+		       "\t\t<pubDate>%s</pubDate>\n"
+		       "\t</item>\n",
+		       post.link, post.link, strtime_post);
+
+		free_blogpost(post);
+		free(dirlist[dircount]);
+	}
+
+	printf("</channel>\n</rss>\n");
 }
 
 int file_exists(char path[]) {

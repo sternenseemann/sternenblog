@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../template.h"
-
-#define TITLE "blog in C"
+#include "../config.h"
 
 void template_header(void) {
 	printf("<!doctype html>\n"
@@ -13,7 +12,7 @@ void template_header(void) {
 	       "color:blue;\n"
 	       "}</style>"
 	       "</head>\n"
-	       "<body><h1>%s</h1>\n", TITLE);
+	       "<body><h1>%s</h1>\n", BLOG_TITLE);
 }
 
 void template_footer(void) {

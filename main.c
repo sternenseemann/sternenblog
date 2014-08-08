@@ -235,7 +235,6 @@ void blog_rss(void) {
 	timeinfo = localtime(&timestamp);
 
 	strftime(strtime_now, sizeof strtime_now, "%a, %d %b %G %T %z", timeinfo);
-	free(timeinfo);
 
 	
 	char *script_name = getenv("SCRIPT_NAME");
@@ -305,7 +304,6 @@ void blog_rss(void) {
 		       "\t</item>\n",
 		       post.link, post.link, strtime_post);
 
-		free(timeinfo);
 		free_blogpost(post);
 		free(dirlist[dircount]);
 	}

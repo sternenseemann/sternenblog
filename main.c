@@ -290,7 +290,7 @@ void blog_rss(void) {
 		
 		fclose(fp);
 
-		printf("]]</description>\n"
+		printf("]]></description>\n"
 		       "\t\t<link>%s</link>\n"
 		       "\t\t<guid>%s</guid>\n"
 		       "\t\t<pubDate>%s</pubDate>\n"

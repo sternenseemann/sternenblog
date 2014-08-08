@@ -1,4 +1,4 @@
-/* blog
+/* sternenblog
  * A small file based blog software
  * intended to run as a CGI script
  * written in C by Lukas Epple aka

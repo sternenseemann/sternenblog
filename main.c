@@ -89,7 +89,7 @@ struct blogpost make_blogpost(char path[]) {
 
 	char *last_slash_position = strrchr(path, '/');
 	if(last_slash_position == NULL) {
-		fprintf(stderr, "WTF?!");
+		fprintf(stderr, "There's something incredibly wrong with the path (%s) supplied to make_blogpost\n", path);
 		exit(EXIT_FAILURE);
 	}
 
@@ -261,6 +261,11 @@ void blog_rss(void) {
 		struct blogpost post;
 		post = make_blogpost_from_dirent(dirlist[dircount]);
 		char *last_slash_position = strrchr(post.path, '/');
+		
+		if(last_slash_position == NULL) {
+			fprintf(stderr, "Malformed path %s in blog_rss\n", post.path);
+			exit(EXIT_FAILURE);
+		}
 
 		FILE *fp = fopen(post.path, "r");
 		char c;

@@ -22,6 +22,13 @@ void template_footer(void) {
 void template_post_single_entry(struct blogpost post) {
 	FILE *fp = fopen(post.path, "r");
 	char c;
+
+	if(fp == NULL) {
+		template_error_404();
+		exit(EXIT_SUCCESS);
+		/* TODO: does CGI still work correctly if we exit
+		 * with EXIT_FAILURE? */
+	}
 	
 	printf("<article>\n");
 
@@ -37,6 +44,11 @@ void template_post_single_entry(struct blogpost post) {
 void template_post_index_entry(struct blogpost post) {
         FILE *fp = fopen(post.path, "r");
         char c;
+
+	if(fp == NULL) {
+		fprintf(stderr, "No such file or directory: %s\n", post.path);
+		exit(EXIT_FAILURE);
+	}
 
         printf("<article>\n");
 

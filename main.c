@@ -84,6 +84,7 @@ int main(void) {
 
 struct blogpost make_blogpost(char path[]) {
 	struct tm blog_tm;
+	memset(&blog_tm, 0, sizeof blog_tm);
 
 	struct blogpost struct_to_return;
 
@@ -101,7 +102,15 @@ struct blogpost make_blogpost(char path[]) {
 
 	/* this parses the filename that is linke
 	 * year-month-day-hour-minute-title */
-	strptime(last_slash_position + 1, "%Y-%m-%d-%H-%M", &blog_tm);
+
+	/* the string in the time part of the path */
+	char time_string[4 + 1 + 2 + 1 + 2 + 1 + 2 + 1 + 2 + 1];
+	strncpy(time_string, last_slash_position + 1, sizeof time_string - 1);
+	time_string[sizeof time_string - 1] = '\0';
+
+	printf("%s\n", time_string);
+
+	strptime(time_string, "%Y-%m-%d-%H-%M", &blog_tm);
 
 	struct_to_return.timestamp = mktime(&blog_tm);
 	struct_to_return.path = malloc(strlen(path) * sizeof(char));

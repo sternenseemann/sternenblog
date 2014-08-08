@@ -235,6 +235,7 @@ void blog_rss(void) {
 	timeinfo = localtime(&timestamp);
 
 	strftime(strtime_now, sizeof strtime_now, "%a, %d %b %G %T %z", timeinfo);
+	free(timeinfo);
 
 	
 	char *script_name = getenv("SCRIPT_NAME");
@@ -275,12 +276,12 @@ void blog_rss(void) {
 		char *last_slash_position = strrchr(post.path, '/');
 
 		FILE *fp = fopen(post.path, "r");
+		char c;
 		if(fp == NULL) {
 			fprintf(stderr, "Could not open file: %s: %s\n",
 					post.path, strerror(errno));
 			exit(EXIT_FAILURE);
 		}
-		char c;
 
 		struct tm *timeinfo = localtime(&post.timestamp);
 		char strtime_post[512];
@@ -294,7 +295,9 @@ void blog_rss(void) {
 		while((c = getc(fp)) != EOF) {
 			printf("%c", c);
 		}
-		       
+		
+		fclose(fp);
+
 		printf("]]</description>\n"
 		       "\t\t<link>%s</link>\n"
 		       "\t\t<guid>%s</guid>\n"
@@ -302,9 +305,12 @@ void blog_rss(void) {
 		       "\t</item>\n",
 		       post.link, post.link, strtime_post);
 
+		free(timeinfo);
 		free_blogpost(post);
 		free(dirlist[dircount]);
 	}
+
+	free(dirlist);
 
 	printf("</channel>\n</rss>\n");
 }

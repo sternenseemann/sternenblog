@@ -19,8 +19,8 @@ void template_footer(void) {
 	printf("</body></html>");
 }
 
-void template_post_single_entry(char post_path[]) {
-	FILE *fp = fopen(post_path, "r");
+void template_post_single_entry(struct blogpost post) {
+	FILE *fp = fopen(post.path, "r");
 	char c;
 	
 	printf("<article>\n");
@@ -34,8 +34,8 @@ void template_post_single_entry(char post_path[]) {
 	fclose(fp);
 }
 
-void template_post_index_entry(char post_path[], char link_path[]) {
-        FILE *fp = fopen(post_path, "r");
+void template_post_index_entry(struct blogpost post) {
+        FILE *fp = fopen(post.path, "r");
         char c;
 
         printf("<article>\n");
@@ -44,7 +44,7 @@ void template_post_index_entry(char post_path[], char link_path[]) {
                 printf("%c", c);
         }
 
-        printf("<p><a href=\"%s\">Permalink</a></p></article>\n", link_path);
+        printf("<p><a href=\"%s\">Permalink</a></p></article>\n", post.link);
 
         fclose(fp);
 }

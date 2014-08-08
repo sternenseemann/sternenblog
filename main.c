@@ -15,13 +15,6 @@
 #include "template.h"
 #include "config.h"
 
-
-struct blogpost {
-	time_t timestamp;
-	char *path;
-	char *link;
-};
-
 /* returns a blogpost struct
  * for a path */
 struct blogpost make_blogpost(char path[]);
@@ -108,8 +101,6 @@ struct blogpost make_blogpost(char path[]) {
 	strncpy(time_string, last_slash_position + 1, sizeof time_string - 1);
 	time_string[sizeof time_string - 1] = '\0';
 
-	printf("%s\n", time_string);
-
 	strptime(time_string, "%Y-%m-%d-%H-%M", &blog_tm);
 
 	struct_to_return.timestamp = mktime(&blog_tm);
@@ -176,49 +167,35 @@ void blog_index(void) {
 		fprintf(stderr, "An error occurred while scanning %s: %s\n", 
 				BLOG_DIR, strerror(errno));
 		exit(EXIT_FAILURE);
-	} else {
-		while(dircount--) {
-			/* first create the path to the blogpost
-			 * which is passed to the template function */
-			unsigned long bufsize = strlen(BLOG_DIR)
-				+ 1 + strlen(dirlist[dircount]->d_name);
-			char post_path[bufsize];
-			strcpy(post_path, BLOG_DIR);
-			strcat(post_path, "/");
-			strcat(post_path, dirlist[dircount]->d_name);
-		
-			/* then create the link URL which is used
-			 * for the permalink */
-			bufsize = strlen(script_name) + 1 +
-			strlen(dirlist[dircount]->d_name);
-			char link_path[bufsize];
-			strcpy(link_path, script_name);
-			strcat(link_path, "/");
-			strcat(link_path, dirlist[dircount]->d_name);
-			
-			/* finally if the file exists call the
-			 * template function. Otherwise
-			 * we do nothing. (this case is also
-			 * FUCKING unlikely */
-			if(file_exists(post_path) > 0) {
-				template_post_index_entry(post_path, link_path);
-			}
-
-			free(dirlist[dircount]);
-		}
-		free(dirlist);
 	}
+	while(dircount--) {
+		struct blogpost post = make_blogpost_from_dirent(dirlist[dircount]);
+
+		/* finally if the file exists call the
+		 * template function. Otherwise
+		 * we do nothing. (this case is also
+		 * FUCKING unlikely */
+		if(file_exists(post.path) > 0) {
+			template_post_index_entry(post);
+		}
+		
+		free_blogpost(post);
+		free(dirlist[dircount]);
+	}
+	free(dirlist);
 
 	template_footer();
 }
 
 void blog_post(char post_path[]) {
 	if(file_exists(post_path) > 0) {
+		struct blogpost post = make_blogpost(post_path);
+
 		send_header("Content-type", "text/html");
 		terminate_headers();
 
 		template_header();
-		template_post_single_entry(post_path);
+		template_post_single_entry(post);
 	} else {
 		send_header("Content-type", "text/html");
 		send_header("Status", "404 Not Found");

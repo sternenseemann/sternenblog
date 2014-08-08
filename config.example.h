@@ -1,3 +1,6 @@
+/* this URL is just the prefixing (http(s):)//domain.com
+ * needed for the RSS feed */
+#define BLOG_SERVER_URL "//example.com"
 /* Where should the blogposts
  * be stored? */
 #define BLOG_DIR "./posts"

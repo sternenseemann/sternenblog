@@ -241,13 +241,14 @@ void blog_rss(void) {
 	       "<channel>\n"
 	       "\t<title>%s</title>\n"
 	       "\t<description>%s</description>\n"
-	       "\t<link>%s</link>\n"
+	       "\t<link>" BLOG_SERVER_URL "%s</link>\n"
 	       "\t<lastBuildDate>%s</lastBuildDate>\n"
 	       "\t<pubDate>%s</pubDate>\n"
 	       "\t<ttl>%d</ttl>\n",
 	       BLOG_TITLE, BLOG_DESCRIPTION, 
-	       script_name, strtime_now,
-	       strtime_now, BLOG_RSS_TTL);
+	       script_name,
+	       strtime_now, strtime_now,
+	       BLOG_RSS_TTL);
 
 	dircount = scandir(BLOG_DIR, &dirlist, no_dotfiles, alphasort);
 
@@ -291,8 +292,8 @@ void blog_rss(void) {
 		fclose(fp);
 
 		printf("]]></description>\n"
-		       "\t\t<link>%s</link>\n"
-		       "\t\t<guid>%s</guid>\n"
+		       "\t\t<link>" BLOG_SERVER_URL "%s</link>\n"
+		       "\t\t<guid>" BLOG_SERVER_URL "%s</guid>\n"
 		       "\t\t<pubDate>%s</pubDate>\n"
 		       "\t</item>\n",
 		       post.link, post.link, strtime_post);

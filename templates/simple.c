@@ -7,14 +7,14 @@ void template_header(void) {
 	printf("<!doctype html>\n"
 	       "<html>\n"
 	       "<head>\n"
-	       "\t<title>simple blog</title>\n"
+	       "\t<title>%s</title>\n"
 	       "\t<meta charset=\"utf-8\"/>\n"
 	       "\t<style type=\"text/css\">\n"
 	       "\ta:link, a:visited{\n"
 	       "\tcolor:blue;\n"
 	       "\t}</style>\n"
 	       "</head>\n"
-	       "<body><h1>%s</h1>\n", BLOG_TITLE);
+	       "<body><h1>%s</h1>\n", BLOG_TITLE, BLOG_TITLE);
 }
 
 void template_footer(void) {

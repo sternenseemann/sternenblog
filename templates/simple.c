@@ -5,18 +5,21 @@
 
 void template_header(void) {
 	printf("<!doctype html>\n"
-	       "<html><head>"
-	       "<title>simple blog</title><meta charset=\"utf-8\"/>"
-	       "<style type=\"text/css\">\n"
-	       "a:link, a:visited{\n"
-	       "color:blue;\n"
-	       "}</style>"
+	       "<html>\n"
+	       "<head>\n"
+	       "\t<title>simple blog</title>\n"
+	       "\t<meta charset=\"utf-8\"/>\n"
+	       "\t<style type=\"text/css\">\n"
+	       "\ta:link, a:visited{\n"
+	       "\tcolor:blue;\n"
+	       "\t}</style>\n"
 	       "</head>\n"
 	       "<body><h1>%s</h1>\n", BLOG_TITLE);
 }
 
 void template_footer(void) {
-	printf("</body></html>");
+	printf("\t<footer><a href=\"%s/rss.xml\">RSS feed</a></footer>\n"
+			"</body></html>", getenv("SCRIPT_NAME"));
 }
 
 void template_post_single_entry(struct blogpost post) {

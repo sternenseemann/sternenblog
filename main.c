@@ -3,6 +3,8 @@
  * intended to run as a CGI script
  * written in C by Lukas Epple aka
  * sternenseemann */
+#define _POSIX_C_SOURCE 200809L
+#define _XOPEN_SOURCE 501
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>

@@ -188,8 +188,8 @@ void blog_index(void) {
 }
 
 void blog_post(char post_path[]) {
-	if(strlen(post_path) != 0 || post_path[0] == '.'
-			|| strchr(post_path, '/') == NULL) {
+	if(strlen(post_path) != 0 && (post_path[0] == '.'
+			|| strchr(post_path, '/') == NULL)) {
 		send_header("Content-type", "text/plain");
 		terminate_headers();
 		printf("No, my dear h4xxx0r :)\nYou won\'t do that :p\n");

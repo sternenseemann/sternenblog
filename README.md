@@ -1,5 +1,5 @@
 # sternenblog
-sternenblog is a blogging engine written in C intended to work with [CGI](de.wikipedia.org/wiki/Common_Gateway_Interface).
+sternenblog is a blogging engine written in C intended to work with [CGI](https://de.wikipedia.org/wiki/Common_Gateway_Interface).
 
 ## How to blog with it?
 * In `config.h` set the constants to your custom values

@@ -2,9 +2,10 @@ CC = gcc
 TEMPLATE = templates/simple.c
 CFLAGS = -Wall --debug --std=c99
 
-blog:
-	$(CC) -o blog main.c $(TEMPLATE) $(CFLAGS)
-clean:
-	rm -f blog
+default: blog.cgi
 
-again: clean blog
+clean:
+	rm -f blog.cgi
+
+%.cgi: main.c $(TEMPLATE)
+	$(CC) -o $@ $? $(CFLAGS)

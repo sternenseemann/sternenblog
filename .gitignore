@@ -1,3 +1,4 @@
 .DS_STORE
-blog.cgi
+*.cgi
+*.o
 config.h

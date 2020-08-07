@@ -1,0 +1,8 @@
+a:visited, a:link {
+  color: blue;
+}
+
+footer {
+  padding-top: 0.5em;
+  border-top: 1px solid black;
+}

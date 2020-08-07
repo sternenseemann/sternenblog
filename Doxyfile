@@ -1,0 +1,28 @@
+DOXYFILE_ENCODING      = UTF-8
+ALLOW_UNICODE_NAMES    = YES
+PROJECT_NAME           = "sternenblog"
+PROJECT_BRIEF          = "file based cgi blog software"
+OPTIMIZE_OUTPUT_FOR_C  = YES
+PROJECT_NUMBER         = "1.0.0"
+OUTPUT_LANGUAGE        = English
+MARKDOWN_SUPPORT       = YES
+TOC_INCLUDE_HEADINGS   = 5
+AUTOLINK_SUPPORT       = YES
+INLINE_SIMPLE_STRUCTS  = YES
+EXTRACT_ALL            = NO
+SHOW_INCLUDE_FILES     = YES
+SORT_MEMBER_DOCS       = NO
+SORT_BRIEF_DOCS        = NO
+SORT_GROUP_NAMES       = NO
+OUTPUT_DIRECTORY       = doc
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_MAN           = YES
+# maybe change, many unnecessary link though
+MAN_LINKS              = NO
+EXCLUDE_PATTERNS       = */README.md
+EXCLUDE_PATTERNS      += */config.h
+EXAMPLE_PATH           = ./doc/examples/
+# hack to allow @include simple.c
+EXAMPLE_PATH          += ./templates/
+EXCLUDE_SYMBOLS        = _POSIX_C_SOURCE

@@ -1,4 +1,18 @@
 .DS_STORE
+
+# compilation output
 *.cgi
 *.o
-config.h
+
+# generated favicon
+assets/favicon.ico
+
+# user config
+/config.h
+
+# doxygen generated docs
+/doc/html
+/doc/man/man3
+
+# nix
+/result*

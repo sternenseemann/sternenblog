@@ -77,6 +77,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <string.h>
 #include <errno.h>
@@ -171,7 +172,7 @@ int main(void) {
 void blog_index(char script_name[]) {
     struct entry *entries = NULL;
 
-    int count = make_index(BLOG_DIR, script_name, 1, &entries);
+    int count = make_index(BLOG_DIR, script_name, 0, &entries);
 
     send_header("Content-type", "text/html");
 
@@ -189,7 +190,15 @@ void blog_index(char script_name[]) {
         template_header();
 
         for(size_t i = 0; i < count; i++) {
-            template_index_entry(entries[i]);
+            if(entry_get_text(&entries[i]) != -1) {
+                template_index_entry(entries[i]);
+
+                // unmap file
+                if(munmap(entries[i].text, entries[i].text_size) != -1) {
+                    entries[i].text_size = -1;
+                    entries[i].text = NULL;
+                }
+            }
         }
 
         template_footer();

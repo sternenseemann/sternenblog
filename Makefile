@@ -5,8 +5,8 @@ ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 sternenblog.cgi: xml.o entry.o index.o cgiutil.o $(TEMPLATE).o main.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-main.o: core.h config.h
-	$(CC) $(CFLAGS) -c -o main.o main.c
+main.o: main.c core.h config.h
+	$(CC) $(CFLAGS) -c -o main.o $<
 
 $(TEMPLATE).o: $(TEMPLATE).c core.h config.h xml.h cgiutil.h
 	$(CC) $(CFLAGS) -I$(ROOT_DIR) -c -o $@ $<

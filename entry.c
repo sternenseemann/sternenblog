@@ -58,7 +58,7 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     // check if the path_info segments are alright
     // should be sane coming from a webserver
     int last_was_slash = 0;
-    for(int i = 0; i < path_info_len; i++) {
+    for(size_t i = 0; i < path_info_len; i++) {
         if(last_was_slash) {
             switch(path_info[i]) {
                 case '/':

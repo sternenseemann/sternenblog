@@ -90,7 +90,7 @@ void xml_raw(struct xml_context *ctx, const char *str) {
 
 void output_attrs(FILE *out, va_list attrs, size_t arg_count) {
     if(arg_count > 0) {
-        for(int i = 1; i<=arg_count; i++) {
+        for(size_t i = 1; i<=arg_count; i++) {
             if(i % 2) {
                 char *name = va_arg(attrs, char *);
                 if(name == NULL) {

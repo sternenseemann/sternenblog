@@ -189,7 +189,7 @@ void blog_index(char script_name[]) {
 
         template_header();
 
-        for(size_t i = 0; i < count; i++) {
+        for(int i = 0; i < count; i++) {
             if(entry_get_text(&entries[i]) != -1) {
                 template_index_entry(entries[i]);
 
@@ -307,7 +307,7 @@ void blog_rss(char script_name[]) {
                       "type", "application/rss+xml");
     }
 
-    for(size_t i = 0; i < count; i++) {
+    for(int i = 0; i < count; i++) {
         xml_open_tag(&ctx, "item");
         xml_open_tag(&ctx, "title");
         xml_raw(&ctx, entries[i].title);

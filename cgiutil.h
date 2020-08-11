@@ -27,8 +27,7 @@ void terminate_headers(void);
  * accompanying reason phrase as a string.
  *
  * The value is statically allocated so do not attempt
- * to free it and/or store it across multiple invocations
- * without copying.
+ * to free it.
  *
  * Example usage:
  *

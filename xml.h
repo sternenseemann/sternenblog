@@ -17,8 +17,6 @@
  * Currently it has some limitations:
  *
  * * It does not give the calling code feedback if errors occurred
- * * It can't do any type of escaping (neither in attributes nor
- *   in content of XML tags)
  * * It doesn't do validity checking of tags and attributes
  *   (legal characters etc.)
  * * It can't generate pretty output (i. e. properly indented),
@@ -108,12 +106,38 @@ void new_xml_context(struct xml_context *ctx);
 void del_xml_context(struct xml_context *ctx);
 
 /*!
+ * @brief Output a xml escaped string
+ *
+ * Outputs the given string escaped for use with XML. It only
+ * does minimal-ish escaping, i. e. it escapes all characters
+ * that have some syntactical meaning in XML. That includes:
+ * Angled brackets (lower than and greater than), ampersand,
+ * and single as well as double quotes. All other characters
+ * are passed through as is and the caller is expected to
+ * make sure they are correctly encoded, i. e. valid UTF-8
+ * characters.
+ *
+ * The escaping is not as minimal as possible. In some cases
+ * you can omit escaping all characters except for `<` and `&`,
+ * but this would be context-sensitive and therefore
+ * unnecessarily tedious to implement. Escaping all
+ * syntactically significant characters has no real downsides
+ * except maybe using a tiny bit more storage than absolutely
+ * necessary.
+ *
+ * @see xml_raw
+ */
+void xml_escaped(struct xml_context *ctx, const char *str);
+
+/*!
  * @brief Output a raw string.
  *
  * Output string to `ctx->out`, equivalent to `fputs(str, ctx.out)`.
- * Note that any escaping necessary must be done manually.
+ * If your string is not already XML, use xml_escaped() to output it
+ * correcty escaped.
  *
  * @see struct xml_context
+ * @see xml_escaped
  */
 void xml_raw(struct xml_context *ctx, const char *str);
 
@@ -129,6 +153,9 @@ void xml_raw(struct xml_context *ctx, const char *str);
  *
  * For example, `xml_empty_tag(&ctx, "my-tag", 2, "foo", "bar", "baz", NULL);` gives
  * `<my-tag foo="bar" baz/>` with default settings.
+ *
+ * The attributes' values are XML-escaped automatically. For details on how escaping
+ * works in xml.h, see xml_escaped().
  *
  * If `closing_slash` is 0 in `ctx`, the slash before the closing ">" will be omitted.
  * This is useful for HTML5 where it is optional.

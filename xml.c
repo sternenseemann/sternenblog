@@ -50,6 +50,35 @@ void del_xml_context(struct xml_context *ctx) {
     }
 }
 
+void output_xml_escaped_char(FILE *out, char c) {
+    switch(c) {
+        case '&':
+            fputs("&amp;", out);
+            break;
+        case '<':
+            fputs("&lt;", out);
+            break;
+        case '>':
+            fputs("&gt;", out);
+            break;
+        case '\'':
+            fputs("&apos;", out);
+            break;
+        case '\"':
+            fputs("&quot;", out);
+            break;
+        default:
+            fputc(c, out);
+            break;
+    }
+}
+
+void xml_escaped(struct xml_context *ctx, const char *str) {
+    for(size_t i = 0; str[i] != '\0'; i++) {
+        output_xml_escaped_char(ctx->out, str[i]);
+    }
+}
+
 void xml_raw(struct xml_context *ctx, const char *str) {
     fputs(str, ctx->out);
 }
@@ -69,7 +98,9 @@ void output_attrs(FILE *out, va_list attrs, size_t arg_count) {
                 char *maybe_val = va_arg(attrs, char *);
                 if(maybe_val != NULL) {
                     fputs("=\"", out);
-                    fputs(maybe_val, out);
+                    for(size_t i = 0; maybe_val[i] != '\0'; i++) {
+                        output_xml_escaped_char(out, maybe_val[i]);
+                    }
                     fputc('\"', out);
                 }
             }

@@ -7,6 +7,11 @@
 
 #include "xml.h"
 
+#define DEBUG_WARN(ctx, ...) \
+    if(ctx->warn != NULL) { \
+        fprintf(ctx->warn, __VA_ARGS__); \
+    }
+
 void debug_xml_stack(FILE *out, struct xml_stack *stack) {
     if(stack != NULL) {
         fprintf(out, "%s ", stack->tag);
@@ -110,9 +115,7 @@ void output_attrs(FILE *out, va_list attrs, size_t arg_count) {
 
 void xml_empty_tag(struct xml_context *ctx, const char *tag, size_t attr_count, ...) {
     if(tag == NULL || ctx == NULL) {
-        if(ctx->warn != NULL) {
-            fputs("Got no tag or ctx\n", ctx->warn);
-        }
+        DEBUG_WARN(ctx, "Got no tag or ctx\n");
         return;
     }
 
@@ -139,9 +142,7 @@ void xml_empty_tag(struct xml_context *ctx, const char *tag, size_t attr_count, 
 
 void xml_open_tag_attrs(struct xml_context *ctx, const char *tag, size_t attr_count, ...) {
     if(tag == NULL || ctx == NULL) {
-        if(ctx->warn != NULL) {
-            fputs("Got no tag or ctx\n", ctx->warn);
-        }
+        DEBUG_WARN(ctx, "Got no tag or ctx\n");
         return;
     }
 
@@ -167,9 +168,8 @@ void xml_open_tag_attrs(struct xml_context *ctx, const char *tag, size_t attr_co
     ctx->stack = malloc(sizeof(struct xml_context));
 
     if(ctx->stack == NULL) {
-        if(ctx->warn != NULL) {
-            fputs("Could not allocate memory for tag stack, now everything will break.\n", ctx->warn);
-        }
+        ctx->stack = old_stack;
+        DEBUG_WARN(ctx, "Could not allocate memory for tag stack, now everything will break.\n")
         return;
     }
 
@@ -186,20 +186,16 @@ void xml_open_tag(struct xml_context *ctx, const char *tag) {
 
 void xml_close_tag(struct xml_context *ctx, const char *tag) {
     if(tag == NULL || ctx == NULL) {
-        if(ctx->warn != NULL) {
-            fputs("Got no tag or ctx\n", ctx->warn);
-        }
+        DEBUG_WARN(ctx, "Got no tag or ctx\n");
         return;
     }
 
     if(ctx->stack == NULL || strcmp(tag, ctx->stack->tag) != 0) {
-        if(ctx->warn != NULL) {
-            fprintf(ctx->warn, "Refusing to close tag %s, ", tag);
-            if(ctx->stack == NULL) {
-                fputs("no tags left to be closed\n", ctx->warn);
-            } else {
-                fputs("unclosed tags remaining\n", ctx->warn);
-            }
+        DEBUG_WARN(ctx, "Refusing to close tag %s, ", tag);
+        if(ctx->stack == NULL) {
+            DEBUG_WARN(ctx, "no tags left to be closed\n");
+        } else {
+            DEBUG_WARN(ctx, "unclosed tags remaining\n");
         }
         return;
     }
@@ -218,9 +214,7 @@ void xml_close_tag(struct xml_context *ctx, const char *tag) {
 
 void xml_close_all(struct xml_context *ctx) {
     if(ctx == NULL) {
-        if(ctx->warn != NULL) {
-            fputs("Got no ctx\n", ctx->warn);
-        }
+        DEBUG_WARN(ctx, "Got no ctx\n");
         return;
     }
 
@@ -234,16 +228,12 @@ void xml_close_all(struct xml_context *ctx) {
 
 void xml_close_including(struct xml_context *ctx, const char *tag) {
     if(ctx == NULL) {
-        if(ctx->warn != NULL) {
-            fputs("Got no ctx\n", ctx->warn);
-        }
+        DEBUG_WARN(ctx, "Got no ctx\n");
         return;
     }
 
     if(ctx->stack == NULL) {
-        if(ctx->warn != NULL) {
-            fprintf(ctx->warn, "Hit end of tag stack while searching for tag %s to close\n", tag);
-        }
+        DEBUG_WARN(ctx, "Hit end of tag stack while searching for tag %s to close\n", tag);
         return;
     } else {
         int last_tag = strcmp(tag, ctx->stack->tag) == 0;

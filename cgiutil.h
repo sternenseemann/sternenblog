@@ -40,3 +40,14 @@ void terminate_headers(void);
  * @return status code and reason phrase as a string.
  */
 char *http_status_line(int status);
+
+/*!
+ * @brief Return HTTP error code for given errno
+ *
+ * Incomplete mapping of `errno`s to HTTP error codes.
+ * Defaults to 500.
+ *
+ * @param err POSIX errno
+ * @return HTTP error code
+ */
+int http_errno(int err);

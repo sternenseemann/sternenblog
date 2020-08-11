@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -27,5 +28,18 @@ char *http_status_line(int status) {
         default:
             // default to 500
             return "500 Internal Server Error";
+    }
+}
+
+int http_errno(int err) {
+    switch(err) {
+        case EACCES:
+            return 403;
+        case ENOENT:
+            return 404;
+        case ENOTDIR:
+            return 404;
+        default:
+            return 500;
     }
 }

@@ -10,20 +10,8 @@
 #include <unistd.h>
 
 #include "core.h"
+#include "cgiutil.h"
 #include "entry.h"
-
-int http_error(int err) {
-    switch(err) {
-        case EACCES:
-            return 403;
-        case ENOENT:
-            return 404;
-        case ENOTDIR:
-            return 404;
-        default:
-            return 500;
-    }
-}
 
 int make_entry(const char *blog_dir, char *script_name, char *path_info, struct entry *entry) {
     // TODO: allow subdirectories?
@@ -107,7 +95,7 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     memset(&file_info, 0, sizeof(struct stat));
 
     if(stat(entry->path, &file_info) == -1) {
-        return http_error(errno);
+        return http_errno(errno);
     }
 
     int regular_file = (file_info.st_mode & S_IFMT) == S_IFREG;
@@ -119,9 +107,9 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     int access = file_info.st_gid == gid || file_info.st_uid == uid;
 
     if(!access) {
-        return http_error(EACCES);
+        return http_errno(EACCES);
     } else if(!regular_file) {
-        return http_error(ENOENT);
+        return http_errno(ENOENT);
     }
 
     // use POSIX compatible version, since we don't need nanoseconds

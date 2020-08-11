@@ -176,6 +176,7 @@ void xml_open_tag_attrs(struct xml_context *ctx, const char *tag, size_t attr_co
     ctx->stack->next = old_stack;
 
     size_t tag_size = strlen(tag) + 1;
+    ctx->stack->type = XML_NORMAL_TAG;
     ctx->stack->tag = malloc(sizeof(char) * tag_size);
     memcpy(ctx->stack->tag, tag, tag_size);
 }
@@ -190,13 +191,18 @@ void xml_close_tag(struct xml_context *ctx, const char *tag) {
         return;
     }
 
-    if(ctx->stack == NULL || strcmp(tag, ctx->stack->tag) != 0) {
-        DEBUG_WARN(ctx, "Refusing to close tag %s, ", tag);
-        if(ctx->stack == NULL) {
-            DEBUG_WARN(ctx, "no tags left to be closed\n");
-        } else {
-            DEBUG_WARN(ctx, "unclosed tags remaining\n");
-        }
+    if(ctx->stack == NULL) {
+        DEBUG_WARN(ctx, "Refusing to close tag %s, no tags left to be closed\n", tag);
+        return;
+    }
+
+    if(ctx->stack->type != XML_NORMAL_TAG) {
+        DEBUG_WARN(ctx, "Refusing to close tag %s, wrong tag type\n", tag);
+        return;
+    }
+
+    if(strcmp(tag, ctx->stack->tag) != 0) {
+        DEBUG_WARN(ctx, "Refusing to close tag %s, unclosed tags remaining\n", tag);
         return;
     }
 
@@ -213,17 +219,7 @@ void xml_close_tag(struct xml_context *ctx, const char *tag) {
 }
 
 void xml_close_all(struct xml_context *ctx) {
-    if(ctx == NULL) {
-        DEBUG_WARN(ctx, "Got no ctx\n");
-        return;
-    }
-
-    if(ctx->stack == NULL) {
-        return;
-    } else {
-        xml_close_tag(ctx, ctx->stack->tag);
-        xml_close_all(ctx);
-    }
+    xml_close_including(ctx, NULL);
 }
 
 void xml_close_including(struct xml_context *ctx, const char *tag) {
@@ -233,15 +229,81 @@ void xml_close_including(struct xml_context *ctx, const char *tag) {
     }
 
     if(ctx->stack == NULL) {
-        DEBUG_WARN(ctx, "Hit end of tag stack while searching for tag %s to close\n", tag);
+        if(tag != NULL) {
+            DEBUG_WARN(ctx, "Hit end of tag stack while searching for tag %s to close\n", tag);
+        }
         return;
     } else {
-        int last_tag = strcmp(tag, ctx->stack->tag) == 0;
+        int last_tag = tag != NULL && strcmp(tag, ctx->stack->tag) == 0;
 
-        xml_close_tag(ctx, ctx->stack->tag);
+        switch(ctx->stack->type) {
+            case XML_NORMAL_TAG:
+                xml_close_tag(ctx, ctx->stack->tag);
+                break;
+            case XML_CDATA:
+                xml_close_cdata(ctx);
+                break;
+            default:
+                DEBUG_WARN(ctx, "Unexpected tag type on stack, aborting\n");
+                return;
+        }
 
         if(!last_tag) {
             xml_close_including(ctx, tag);
         }
     }
+}
+
+void xml_open_cdata(struct xml_context *ctx) {
+    if(ctx == NULL) {
+        DEBUG_WARN(ctx, "Got no ctx\n");
+        return;
+    }
+
+    struct xml_stack *old_stack = ctx->stack;
+
+    ctx->stack = malloc(sizeof(struct xml_stack));
+
+    if(ctx->stack == NULL) {
+        ctx->stack = old_stack;
+
+        DEBUG_WARN(ctx, "Could not allocate memory for tag stack, now everything will break.\n");
+        return;
+    }
+
+    ctx->stack->next = old_stack;
+    ctx->stack->tag = NULL;
+    ctx->stack->type = XML_CDATA;
+
+    fputs("<![CDATA[", ctx->out);
+}
+
+void xml_close_cdata(struct xml_context *ctx) {
+    if(ctx == NULL) {
+        DEBUG_WARN(ctx, "Got no ctx\n");
+        return;
+    }
+
+    if(ctx->stack == NULL) {
+        DEBUG_WARN(ctx, "No CDATA to close\n");
+        return;
+    }
+
+    if(ctx->stack->type != XML_CDATA) {
+        DEBUG_WARN(ctx, "No CDATA on top of stack, refusing to close\n");
+        return;
+    }
+
+    struct xml_stack *old_head = ctx->stack;
+
+    ctx->stack = old_head->next;
+
+    if(old_head->tag != NULL) {
+        // shouldn't happen though
+        free(old_head->tag);
+    }
+
+    free(old_head);
+
+    fputs("]]>", ctx->out);
 }

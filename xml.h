@@ -14,15 +14,13 @@
  * programmer's XML nesting. For information on its sanity
  * checking abilities see the documentation of `xml_close_tag()`.
  *
- * Currently it has some limitations:
+ * Currently it has some limitations (possibly incomplete list):
  *
  * * It does not give the calling code feedback if errors occurred
  * * It doesn't do validity checking of tags and attributes
  *   (legal characters etc.)
  * * It can't generate pretty output (i. e. properly indented),
  *   its output is currently always "minified".
- * * It currently has no satisfying support for `CDATA`,
- *   XML declarations and probably a lot more
  *
  * For handling arbitrary data this library is probably not a good
  * fit, it is mainly intended and tested for generating HTML and
@@ -37,6 +35,17 @@
 #include <stdio.h>
 
 /*!
+ * @brief Type of an XML "tag"
+ *
+ * This is mostly internally used to be able
+ * to keep track of CDATA using `xml_stack`.
+ */
+enum xml_tag_type {
+    XML_NORMAL_TAG,
+    XML_CDATA
+};
+
+/*!
  * @brief Internal linked list type
  *
  * Linked list used internally to keep track of tags to close.
@@ -44,7 +53,8 @@
  * @see struct xml_context
  */
 struct xml_stack {
-    char *tag;               //!< tag name
+    enum xml_tag_type type;  //! type of the tag
+    char *tag;               //!< tag name if `XML_NORMAL_TAG`, otherwise `NULL`
     struct xml_stack *next;  //!< tag to be closed after the current one
 };
 
@@ -241,9 +251,11 @@ void xml_close_tag(struct xml_context *ctx, const char *tag);
  * @brief Close all remaining unclosed tags
  *
  * `xml_close_all()` iterates through the `xml_stack` and calls
- * `xml_close_tag()` for every tag in it. A call to it will thus
- * result in an empty `xml_stack` and all previously opened tags
- * being closed correctly.
+ * `xml_close_tag()` or `xml_close_cdata()` respectively for every
+ * entry in it. A call to it will thus result in an empty `xml_stack`
+ * and all previously opened tags being closed correctly.
+ *
+ * Internally it's an alias for `xml_close_all(ctx, NULL)`
  *
  * Note that `xml_close_all()` will limit error checking, since it
  * (by nature) always succeeds and has no insight into what the
@@ -261,7 +273,8 @@ void xml_close_all(struct xml_context *ctx);
  * `xml_close_including()` works like `xml_close_all()`, but
  * will stop after it hits a tag of the given name.
  * If the given tag is not present in the stack, it behaves
- * like `xml_close_all()`.
+ * like `xml_close_all()`. It is not possible to match
+ * a `CDATA` section using `xml_close_including()`.
  *
  * Be aware that it might lead to unexpected results if
  * multiple tags of the same are nested. Consider the
@@ -296,3 +309,32 @@ void xml_close_all(struct xml_context *ctx);
  * @see struct xml_stack
  */
 void xml_close_including(struct xml_context *ctx, const char *tag);
+
+/*!
+ * @brief Start CDATA section
+ *
+ * Behaves like xml_open_tag(), but for opening `CDATA` sections.
+ * Internally the `XML_CDATA` type of `struct xml_stack` is used.
+ *
+ * Note that this function won't prevent `CDATA` sections or XML
+ * elements inside a `CDATA` section, since this is sometimes
+ * useful.
+ *
+ * @see xml_close_cdata
+ * @see enum xml_tag_type
+ * @see struct xml_stack
+ */
+void xml_open_cdata(struct xml_context *ctx);
+
+/*!
+ * @brief Close CDATA section
+ *
+ * Behaves like xml_close_tag(), but for `CDATA` sections.
+ *
+ * Checks the top of the stack if it is a `CDATA` section.
+ * In that case closes it and updates the stack, otherwise
+ * does nothing and if applicable outputs a warning.
+ *
+ * @see xml_open_cdata
+ */
+void xml_close_cdata(struct xml_context *ctx);

@@ -325,9 +325,9 @@ void blog_rss(char script_name[]) {
 
         if(entries[i].text_size > 0) {
             xml_open_tag(&ctx, "description");
-            xml_raw(&ctx, "<![CDATA[");
+            xml_open_cdata(&ctx);
             xml_raw(&ctx, entries[i].text);
-            xml_raw(&ctx, "]]>");
+            xml_close_cdata(&ctx);
             xml_close_tag(&ctx, "description");
         }
 

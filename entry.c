@@ -125,8 +125,9 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     // don't depend on it starting with a slash
 
     size_t script_name_len = strlen(script_name);
+    size_t link_size = script_name_len + path_info_len + 1;
 
-    entry->link = malloc(sizeof(char) * (script_name_len + path_info_len + 1));
+    entry->link = malloc(sizeof(char) * link_size);
 
     if(script_name_len != 0) {
         memcpy(entry->link, script_name, script_name_len);
@@ -134,7 +135,11 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
 
     memcpy(entry->link + script_name_len, path_info, path_info_len);
 
-    entry->link[path_info_len + script_name_len] = '\0';
+    entry->link[link_size - 1] = '\0';
+
+    if(urlencode_realloc(&entry->link, link_size) <= 0) {
+        return 500;
+    }
 
     return 200;
 }

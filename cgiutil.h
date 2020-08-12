@@ -51,3 +51,41 @@ char *http_status_line(int status);
  * @return HTTP error code
  */
 int http_errno(int err);
+
+/*!
+ * @brief Urlencode a given dynamically allocated string
+ *
+ * urlencode_realloc() receives a pointer to a pointer to
+ * a dynamically allocated string to encode plus its size
+ * including the null byte at the end.
+ *
+ * It then replaces every reserved character in the string
+ * except `/` with the appropriate percent encoding. If
+ * the size of the buffer is not enough, it uses `realloc()`
+ * to increase it.
+ *
+ * Note that the implementation of url encoding is not 100%
+ * correct, but should be good enough in the context of
+ * sternenblog. `/` is not encoded since on unix
+ * a slash should always a path delimiter and never part of
+ * a filename. Another limitation of the url encoding is
+ * that it only checks for a list of characters to encode
+ * instead of checking if the characters are unreserved
+ * and don't need to be encoded which would be more correct.
+ * The approach taken has the big advantage that we don't
+ * need to worry about UTF-8, which makes the implementation
+ * considerably simpler. As a consequence however it will
+ * be not aggressive enough in terms of encoding in some
+ * cases.
+ *
+ * On error -1 is returned. In such a case the original
+ * pointer remains intact, so you can either `free()` it
+ * or continue with the unencoded string.
+ *
+ * Otherwise it returns new size of the buffer.
+ *
+ * @param **input pointer to input string
+ * @param size size of input string including null byte
+ * @return -1 on error, else size of buffer
+ */
+int urlencode_realloc(char **input, int size);

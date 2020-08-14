@@ -30,10 +30,21 @@ doc:
 	doxygen Doxyfile
 
 install: assets/favicon.ico assets/sternenblog.css doc sternenblog.cgi
+	# webroot
 	$(INSTALL) -Dm755 sternenblog.cgi --target-directory $(PREFIX)$(WEB_PATH)/
 	$(INSTALL) -Dm644 assets/sternenblog.css --target-directory $(PREFIX)$(WEB_PATH)/
 	$(INSTALL) -Dm644 assets/favicon.ico --target-directory $(PREFIX)$(WEB_PATH)/
-	$(INSTALL) -Dm644 doc/man/man3/*.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
+	# man pages
+	$(INSTALL) -Dm644 doc/man/man1/sternenblog.cgi.1 --target-directory $(PREFIX)$(MAN_PATH)/man1/
+	$(INSTALL) -Dm644 doc/man/man3/core.h.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
+	$(INSTALL) -Dm644 doc/man/man3/config.example.h.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
+	$(INSTALL) -Dm644 doc/man/man3/template.h.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
+	$(INSTALL) -Dm644 doc/man/man3/xml.h.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
+	$(INSTALL) -Dm644 doc/man/man3/cgiutil.h.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
+	$(INSTALL) -Dm644 doc/man/man3/entry.h.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
+	$(INSTALL) -Dm644 doc/man/man3/index.h.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
+	$(INSTALL) -Dm644 doc/man/man3/main.c.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
+	# html documentation and examples
 	$(INSTALL) -d $(PREFIX)$(DOC_PATH)
 	$(CP) -r doc/html $(PREFIX)$(DOC_PATH)/html
 	$(CP) -r doc/examples $(PREFIX)$(DOC_PATH)/examples

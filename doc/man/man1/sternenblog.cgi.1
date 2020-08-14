@@ -1,0 +1,296 @@
+.Dd August 12, 2020
+.Dt STERNENBLOG.CGI 1
+.Os
+.Sh NAME
+.Nm sternenblog.cgi
+.Nd file based CGI blog software
+.Sh SYNOPSIS
+.Nm sternenblog.cgi
+.Sh DESCRIPTION
+The
+.Nm
+CGI script implements a blog application based on a directory containing blog
+entries in HTML format.
+It serves both an index page listing all available entries and single pages for
+every individual entry.
+.Pp
+The Request URL
+.Ql /sternenblog.cgi
+results in the index page being served,
+.Ql /sternenblog.cgi/rss.xml
+returns a RSS feed with the same contents as the index page and
+.Ql /sternenblog.cgi/my-entry
+serves the single entry page for
+.Pa /path/to/entry/directory/my-entry .
+.Pp
+Every entry is a regular file in the configured entry directory that meets
+certain criteria (see
+.Sx "SECURITY CONSIDERATIONS"
+for details) and should contain a HTML snippet which is passed to the
+used template by
+.Nm
+to generate a complete HTML page.
+To determine the “publication” datetime of an entry and to sort the index
+page, the modification time of the underlying file is used.
+To backdate an entry (for example after a minor edit)
+.Xr touch 1
+can be used to (re)set the modification time.
+.Ss CONFIGURATION
+.Nm
+is configured statically by changing
+.Pa config.h
+before (re)compiling it.
+If no custom config header is provided at compile time,
+it is generated from the default one,
+.Pa config.example.h ,
+which also may serve as a starting point for a custom configuration.
+.Bl -tag -width Ds
+.It Sy BLOG_DIR
+The directory blog entries are stored in.
+See
+.Sx "SECURITY CONSIDERATIONS"
+for information on which files in that directory are processed by
+.Nm .
+It is recommended to use a dedicated directory owned by the webserver's
+user and group which only contains the blog entries without a (sub)directory
+structure.
+.Pp
+Must either start with
+.Ql ./
+or
+.Ql /
+although the latter, i. e. an absolute path, is recommended.
+.Pp
+Default value is
+.Pa /srv/sternenblog/ .
+.It Sy BLOG_TITLE
+Title of the blog to serve, used in the RSS feed and the default template.
+.Pp
+Default value is
+.Ql my blog .
+.It Sy BLOG_DESCRIPTION
+Used to set the
+.Ql description
+element of the RSS feed.
+.Pp
+Default value is
+.Ql my personal blog .
+.It Sy BLOG_SERVER_URL
+Public URL of the root of the server, i. e. public address or hostname and used
+protocol.
+This is used to construct global URLs to the entries for the RSS
+feed.
+.Pp
+Default value is
+.Ql http://localhost .
+.It Sy BLOG_RSS_TTL
+Used to set the
+.Ql ttl
+element of the RSS feed.
+The value (in minutes) can be used by feed readers to
+determine how often to refresh the RSS feed.
+.Pp
+Default value is
+.Ql 60 .
+.It Sy BLOG_CSS
+Absolute path from the web root to the CSS stylesheet to be used by the default
+template.
+See
+.Sx FILES
+for the location of the installed default stylesheet.
+.Pp
+This value is optional: If not set, no stylesheet is included.
+.Pp
+Default value is
+.Ql /sternenblog.css
+.El
+.Pp
+It is also possible to add additional values to
+.Pa config.h
+to be used in a custom template.
+.Pp
+The template can be changed in
+.Pa config.mk
+by changing the
+.Ql TEMPLATE
+variable to the path to the template file without its extension.
+For details
+refer to section
+.Sx TEMPLATING .
+.Ss BUILDING
+.Nm
+is built using
+.Xr make 1 .
+.Pp
+The default target compiles
+.Nm
+using
+.Sy CC
+and the
+.Sy CFLAGS
+set in
+.Pa config.mk
+and generates
+.Pa config.h
+from
+.Pa config.example.h
+beforehand if it is missing.
+.Pp
+In most, if not all, cases it is required to provide a custom
+.Pa config.h
+or to change
+.Pa config.example.h
+prior to compiling for
+.Nm
+to work properly.
+For details refer to the previous section
+.Sx CONFIGURATION .
+.Pp
+The
+.Ql doc
+target builds developer documentation about templating, provided helper
+libraries and
+.Nm
+internals using
+.Xr doxygen 1 .
+The output can be found in
+.Pa doc/html
+and
+.Pa doc/man/man3
+in HTML and man page format respectively.
+.Pp
+The
+.Ql install
+target installs
+documentation and files necessary for serving
+.Nm sternenblog.cgi
+to
+.Pa /usr/local .
+If
+.Pa assets/favicon.ico
+is missing, a default one is generated using
+.Xr convert 1 .
+All files intended to be served by a web server are
+installed to
+.Pa /usr/local/share/sternenblog .
+For a listing of files installed apart from
+documentation and the CGI script itself see section
+.Sx FILES .
+All installation paths can be adjusted in
+.Pa config.mk
+\".Ss WEBSERVER CONFIGURATION TODO
+.
+.Ss TEMPLATING
+See
+.Xr template.h 3
+.
+.Sh ENVIRONMENT
+.Nm
+expects a subset of the CGI 1.1 environment as specified in
+.Lk https://tools.ietf.org/html/rfc3875 RFC3876 .
+The expected variables to be set are:
+.Bl -tag -width Ds
+.It Ev SCRIPT_NAME
+Expected to be the script name as an absolute path from the webroot, i. e\.
+.Ql <a href="$SCRIPT_NAME">index</a>
+is expected to link to the script itself, so
+.Ev PATH_INFO
+is empty and the index page is served.
+.It Ev PATH_INFO
+Is expected to be the URL part after
+.Ev SCRIPT_NAME ,
+i. e. the path to a subpage of the script.
+This is interpreted as a path to an entry and must start with a leading
+.Ql / .
+.El
+.Pp
+Most likely these will be set correctly by your favorite web server without
+any special configuration.
+.Sh FILES AND DIRECTORIES
+Below is a listing of files and directories used and installed by default.
+It is possible to configure
+.Nm
+to use different locations instead as described in section
+.Sx CONFIGURATION .
+.Bl -tag -width Ds
+.It Pa /srv/sternenblog
+Default directory for entries used by
+.Nm .
+Controlled by
+.Ql BLOG_DIR
+in
+.Pa config.h .
+Not created by the installation process.
+.It Pa /usr/share/sternenblog/sternenblog.css
+Default CSS the default template of
+.Nm
+uses.
+If used, must be served at
+.Pa /sternenblog.css
+by the used web server.
+Controlled by
+.Ql BLOG_CSS
+in
+.Pa config.h .
+.It Pa /usr/share/sternenblog/favicon.ico
+Default favicon of
+.Nm .
+Can optionally be served at
+.Pa /favicon.ico
+by the used web server.
+.El
+.Sh EXIT STATUS
+.Nm
+always returns 0.
+Errors are reported via the HTTP
+.Ql Status
+header.
+.Sh SEE ALSO
+.Xr cgiutil.h 3 ,
+.Xr config.example.h 3 ,
+.Xr core.h 3 ,
+.Xr entry.h 3 ,
+.Xr index.h 3 and
+.Xr main.c 3 .
+.Xr template.h 3 ,
+.Xr xml.h 3 ,
+.Sh AUTHORS
+.An sternenseemann <sternenseemann@systemli.org>
+.\" .Sh LIMITATIONS TODO
+.Sh "SECURITY CONSIDERATIONS"
+.Nm
+hasn't been tested thoroughly in production yet and, as it is a one person
+project, no second pair of eyes has reviewed the code.
+There may well be issues that haven't been discovered yet.
+.Pp
+User input comes from two avenues: The first one is trusted:
+blog entries stored in the configured directory.
+The second one is arbitrary user input from third parties via
+.Ev PATH_INFO .
+.Pp
+.Ev PATH_INFO
+is validated to prevent
+.Nm
+from accessing dotfiles and escaping from the configured directory by using
+.Ql .. .
+Although the latter usually is already mitigated by the web server's
+processing of the request URL.
+.Pp
+While accessing files,
+.Nm
+will only process regular files (e. g. not follow symlinks) and make sure that
+the file is either owned by the group or the user it is running as (which will
+usually be the webserver's user and group).
+The check is made using the effective UID and GID which are determined using
+.Xr geteuid 2 and
+.Xr getegid 2 .
+The idea here is that
+.Xr chown 1
+has to be used actively for the entry files to be processed by
+.Nm .
+.Pp
+.Nm
+will process files in subdirectories of the configured directory if they are
+addressed directly.
+They will however not be part of any indices or listings.
+This behavior might be subject to change in the future.

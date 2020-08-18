@@ -1,17 +1,35 @@
 # sternenblog
-sternenblog is a blogging engine written in C intended to work with [CGI](https://de.wikipedia.org/wiki/Common_Gateway_Interface).
 
-## How to blog with it?
-* In `config.h` set the constants to your custom values
-* In the Makefile set `TEMPLATE` to your template (see below)
-* run `make`
-* symlink/move `./blog` somewhere where your webserver will execute it as CGI script
-* blogpost are stored in `BLOG_DIR` (defined in `config.h`) the must be named like this: `YYYY-MM-DD-HH-MM-title`
-* the RSS Feed ist located at `http://your-server.com/cgi-bin/blog/rss.xml`
+🌟blog — file based CGI blog software
 
-## writing templates
-See [template.h](./template.h), [blogdefs.h](./blogdefs.h) and [simple.c](./templates/simple.c).
-(more detailed documentation is coming soon)
+## user documentation
 
-## Is it anyhow useful?
-Oh yes. And it will take you to the stars! :stars:
+sternenblog is documented in `sternenblog.cgi(1)` which you can read using
+`man -l doc/man/man1/sternenblog.cgi.1`. A rendered version for your
+web browser will be added soon™.
+
+## configuration and building
+
+configuration of sternenblog is static and done in
+`config.h` and `config.mk`. After configuring you
+can compile the CGI application and (optionally)
+install it:
+
+```
+make
+make install # default installation to /usr/local/share/sternenblog
+```
+
+the possible customizations are detailed in the
+[user documentation](#user%20documentation).
+
+## templating and development
+
+templating is unstable at the moment. for the current state
+you have to refer to `core.h` and `template.h`.
+
+you can generate documentation from all source files using `make doc`
+which requires `doxygen` to be installed.
+
+outstanding tasks are managed using [t](https://hg.stevelosh.com/t)
+and stored in [`TODO`](./TODO). The format is also text editor friendly.

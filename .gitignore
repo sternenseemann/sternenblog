@@ -16,3 +16,6 @@ assets/favicon.ico
 
 # nix
 /result*
+
+# t
+.TODO.done

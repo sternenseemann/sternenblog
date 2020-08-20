@@ -8,7 +8,5 @@ enum time_format {
 // max HTML/Atom: 24 + NUL byte
 // max RSS:       31 + NUL byte
 
-char *format_string(enum time_format t, long tz);
-
 size_t flocaltime(char *b, enum time_format type, size_t size, const time_t *time);
 

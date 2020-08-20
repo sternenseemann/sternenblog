@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "bitutil.h"
 
 void send_header(char key[], char val[]) {
     fputs(key, stdout);
@@ -43,31 +44,6 @@ int http_errno(int err) {
             return 404;
         default:
             return 500;
-    }
-}
-
-char nibble_hex(short h) {
-    switch(h) {
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-            return (h + 48);
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-            return (h + 55);
-        default:
-            return 0;
     }
 }
 

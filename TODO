@@ -3,6 +3,7 @@ atom feed | id:44aca4a04ff19c567e08968370cc535139807bbd
 add support for caching | id:472d68f1af5489020f4c5808e805822e3da77ffc
 rethink logging / debug output | id:5734e2717f28d80ac65d3f2123a0f46c01d4a0c1
 if possible determine BLOG_SERVER_URL automatically | id:5ad1fabab42a5776ab1446d09659c7a99a104245
+rework timezone offsets without tzset() | id:64d715e826ba9fdbcc72cb1b92a77f004642d2a3
 support markdown markup via lowdown | id:90c72d144f21d78d1b56790a927f6eea52df2a2c
 get rid of as many fixed size buffers as possible | id:9281f3a25aa08f6ba5d67c02e65cd0fb7f0a6b3c
 templating: give all functions context (index or not, SCRIPT_NAME, entry struct if applicable) | id:930c2e4f2c4c9ec3efef87b6ddd50a6ba6dd4903

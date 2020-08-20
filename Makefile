@@ -2,13 +2,13 @@ include config.mk
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-sternenblog.cgi: xml.o entry.o index.o cgiutil.o $(TEMPLATE).o main.o
+sternenblog.cgi: xml.o entry.o index.o cgiutil.o timeutil.o $(TEMPLATE).o main.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-main.o: main.c core.h config.h
+main.o: main.c core.h timeutil.h config.h
 	$(CC) $(CFLAGS) -c -o main.o $<
 
-$(TEMPLATE).o: $(TEMPLATE).c core.h config.h xml.h cgiutil.h
+$(TEMPLATE).o: $(TEMPLATE).c core.h config.h xml.h cgiutil.h timeutil.h
 	$(CC) $(CFLAGS) -I$(ROOT_DIR) -c -o $@ $<
 
 # only invoked if config.h does not exist

@@ -88,6 +88,7 @@
 #include "cgiutil.h"
 #include "entry.h"
 #include "index.h"
+#include "timeutil.h"
 #include "template.h"
 #include "xml.h"
 
@@ -255,15 +256,6 @@ void blog_rss(char script_name[]) {
     send_header("Content-type", "application/rss+xml");
     terminate_headers();
 
-    // current time
-    time_t timestamp;
-    struct tm *timeinfo;
-    const char *rss_time_format = "%a, %d %b %G %T %z";
-    char strtime_now[64];
-
-    time(&timestamp);
-    timeinfo = localtime(&timestamp);
-
     struct xml_context ctx;
     new_xml_context(&ctx);
 
@@ -275,27 +267,34 @@ void blog_rss(char script_name[]) {
     xml_open_tag(&ctx, "channel");
 
     xml_open_tag(&ctx, "title");
-    xml_raw(&ctx, BLOG_TITLE);
+    xml_escaped(&ctx, BLOG_TITLE);
     xml_close_tag(&ctx, "title");
 
     xml_open_tag(&ctx, "description");
+    xml_open_cdata(&ctx);
     xml_raw(&ctx, BLOG_DESCRIPTION);
+    xml_close_cdata(&ctx);
     xml_close_tag(&ctx, "description");
 
     xml_open_tag(&ctx, "link");
-    xml_raw(&ctx, BLOG_SERVER_URL);
+    xml_escaped(&ctx, BLOG_SERVER_URL);
     xml_close_tag(&ctx, "link");
 
-    if(strftime(strtime_now, sizeof strtime_now, rss_time_format, timeinfo) > 0) {
-        xml_open_tag(&ctx, "lastBuildDate");
-        xml_raw(&ctx, strtime_now);
-        xml_close_tag(&ctx, "lastBuildDate");
+    if(count > 0) {
+        time_t update_time = entries[0].time;
+        char strtime_update[MAX_TIMESTR_SIZE];
+
+        if(flocaltime(strtime_update, RSS_TIME_FORMAT, MAX_TIMESTR_SIZE, &update_time) > 0) {
+            xml_open_tag(&ctx, "lastBuildDate");
+            xml_escaped(&ctx, strtime_update);
+            xml_close_tag(&ctx, "lastBuildDate");
+        }
     }
 
-    char ttl_string[64];
+    char ttl_string[32];
     if(snprintf(ttl_string, sizeof ttl_string, "%d", BLOG_RSS_TTL) >= 0) {
         xml_open_tag(&ctx, "ttl");
-        xml_raw(&ctx, ttl_string);
+        xml_escaped(&ctx, ttl_string);
         xml_close_tag(&ctx, "ttl");
     }
 
@@ -310,17 +309,17 @@ void blog_rss(char script_name[]) {
     for(int i = 0; i < count; i++) {
         xml_open_tag(&ctx, "item");
         xml_open_tag(&ctx, "title");
-        xml_raw(&ctx, entries[i].title);
+        xml_escaped(&ctx, entries[i].title);
         xml_close_tag(&ctx, "title");
 
         xml_open_tag(&ctx, "link");
-        xml_raw(&ctx, BLOG_SERVER_URL);
-        xml_raw(&ctx, entries[i].link);
+        xml_escaped(&ctx, BLOG_SERVER_URL);
+        xml_escaped(&ctx, entries[i].link);
         xml_close_tag(&ctx, "link");
 
         xml_open_tag(&ctx, "guid");
-        xml_raw(&ctx, BLOG_SERVER_URL);
-        xml_raw(&ctx, entries[i].link);
+        xml_escaped(&ctx, BLOG_SERVER_URL);
+        xml_escaped(&ctx, entries[i].link);
         xml_close_tag(&ctx, "guid");
 
         if(entries[i].text_size > 0) {
@@ -331,12 +330,11 @@ void blog_rss(char script_name[]) {
             xml_close_tag(&ctx, "description");
         }
 
-        struct tm *timeinfo_entry = localtime(&entries[i].time);
-        char strtime_entry[64];
+        char strtime_entry[MAX_TIMESTR_SIZE];
 
-        if(strftime(strtime_entry, sizeof strtime_entry, rss_time_format, timeinfo_entry) > 0) {
+        if(flocaltime(strtime_entry, RSS_TIME_FORMAT, MAX_TIMESTR_SIZE, &entries[i].time) > 0) {
             xml_open_tag(&ctx, "pubDate");
-            xml_raw(&ctx, strtime_entry);
+            xml_escaped(&ctx, strtime_entry);
             xml_close_tag(&ctx, "pubDate");
         }
 

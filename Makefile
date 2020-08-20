@@ -2,7 +2,7 @@ include config.mk
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-sternenblog.cgi: xml.o entry.o index.o bitutil.o cgiutil.o timeutil.o $(TEMPLATE).o main.o
+sternenblog.cgi: xml.o entry.o index.o stringutil.o cgiutil.o timeutil.o $(TEMPLATE).o main.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 main.o: main.c core.h timeutil.h config.h

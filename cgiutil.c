@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "bitutil.h"
+#include "stringutil.h"
 
 void send_header(char key[], char val[]) {
     fputs(key, stdout);

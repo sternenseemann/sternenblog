@@ -88,6 +88,7 @@
 #include "cgiutil.h"
 #include "entry.h"
 #include "index.h"
+#include "stringutil.h"
 #include "timeutil.h"
 #include "template.h"
 #include "xml.h"
@@ -298,12 +299,13 @@ void blog_rss(char script_name[]) {
         xml_close_tag(&ctx, "ttl");
     }
 
-    char rss_link[256];
-    if(snprintf(rss_link, sizeof rss_link, "%s%s/rss.xml", BLOG_SERVER_URL, script_name) > 0) {
+    char *rss_link = catn_alloc(3, BLOG_SERVER_URL, script_name, "/rss.xml");
+    if(rss_link != NULL) {
         xml_empty_tag(&ctx, "atom:link", 3,
                       "rel", "self",
                       "href", rss_link,
                       "type", "application/rss+xml");
+        free(rss_link);
     }
 
     for(int i = 0; i < count; i++) {

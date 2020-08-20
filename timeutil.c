@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "timeutil.h"
-#include "bitutil.h"
+#include "stringutil.h"
 
 #include <stdio.h>
 

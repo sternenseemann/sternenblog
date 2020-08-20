@@ -2,15 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #include <core.h>
 #include <template.h>
 #include <config.h>
 #include <cgiutil.h>
+#include <timeutil.h>
 #include <xml.h>
-
-extern long timezone;
 
 static struct xml_context ctx;
 
@@ -44,13 +42,9 @@ int make_link(char *buf, size_t size, char *abs_path) {
 }
 
 void output_entry_time(struct xml_context *ctx, struct entry entry) {
-    tzset();
-    char *format = timezone == 0 ? "%Y-%m-%d %TZ" : "%Y-%m-%d %T%z";
+    char strtime[MAX_TIMESTR_SIZE];
 
-    char strtime[32];
-    struct tm *local = localtime(&entry.time);
-
-    if(strftime(strtime, sizeof strtime, format, local) > 0) {
+    if(flocaltime(strtime, HTML_TIME_FORMAT_READABLE, MAX_TIMESTR_SIZE, &entry.time) > 0) {
         xml_open_tag_attrs(ctx, "time", 1, "datetime", strtime);
         xml_raw(ctx, strtime);
         xml_close_tag(ctx, "time");

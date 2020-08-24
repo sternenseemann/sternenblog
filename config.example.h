@@ -4,7 +4,7 @@
  */
 
 /*!
- * @name General Settings
+ * @name Operational Settings
  * @{
  */
 
@@ -18,19 +18,27 @@
 #define BLOG_DIR "/srv/sternenblog/"
 
 /*!
- * @brief Site title
+ * @brief Public URL of the webserver
  *
- * Title of the site to serve.
- * Will be used for the RSS feed and in templates to, e. g. set the HTML title tag.
+ * (External) URL the server that the script is running on is reachable via.
+ * This should be the base URL of your webserver without any trailing slashes
+ * or subpaths, as sternenblog will use SCRIPT_NAME and PATH_INFO to figure
+ * out the path from the root of the server.
  */
-#define BLOG_TITLE "sternenblog"
+#define BLOG_SERVER_URL "http://localhost"
 
 //! @}
 
 /*!
- * @name RSS Settings
+ * @name Site Metadata
  * @{
+ * @brief Site title
+ *
+ * Title of the site to serve.
+ * Will be used for the feeds and in templates to, e. g. set the HTML title tag.
  */
+#define BLOG_TITLE "sternenblog"
+
 /*!
  * @brief Site description
  *
@@ -41,17 +49,11 @@
  */
 #define BLOG_DESCRIPTION "my personal blog"
 
-/*!
- * @brief Public URL of the webserver
- *
- * (External) URL the server that the script is running on is reachable via.
- * This should be the base URL of your webserver without any trailing slashes
- * or subpaths, as sternenblog will use SCRIPT_NAME and PATH_INFO to figure
- * out the path from the root of the server.
- */
-#define BLOG_SERVER_URL "http://localhost"
+//! @}
 
 /*!
+ * @name Caching
+ * @{
  * @brief TTL of RSS feed
  *
  * TTL (time to live) of the RSS feed in minutes. Feed readers may use this
@@ -64,7 +66,7 @@
 //! @}
 
 /*!
- * @name Optional Settings (delete to unset)
+ * @name Template settings
  * @{
  */
 /*!
@@ -72,6 +74,8 @@
  *
  * CSS Stylesheet to use for the entire site. The default template will use
  * the Stylesheet URL given here if present.
+ *
+ * Optional setting.
  */
 #define BLOG_CSS "/sternenblog.css"
 //! @}

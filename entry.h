@@ -73,10 +73,23 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
  *
  * @return 0 on success, -1 on error, currently errno is not set correctly
  *
+ * @see entry_unget_text
  * @see make_entry
  * @see free_entry
  */
 int entry_get_text(struct entry *entry);
+
+/*!
+ * @brief Unmap the file referenced in a `struct entry`
+ *
+ * Tries to `munmap()` the file pointed to by `entry->text`
+ * if present, and updates `entry->text_size` accordingly.
+ *
+ * The rest of the struct is left untouched.
+ *
+ * @see free_entry
+ */
+void entry_unget_text(struct entry *entry);
 
 /*!
  * @brief Free dynamically allocated parts on an `entry`
@@ -86,8 +99,11 @@ int entry_get_text(struct entry *entry);
  * after being called, so you can always call `free_entry()` after
  * `make_entry()`.
  *
- * It also unmaps the mapped file in `text` if it is not `NULL`.
- * For this `text_size` is needed which is set correctly
- * by `entry_get_text()`.
+ * It also unmaps the mapped file in `text` if it is not `NULL`
+ * using `entry_unget_text()`.
+ *
+ * Warning: It won't call `free()` on the entire entry structure.
+ *
+ * @see entry_unget_text
  */
-void free_entry(struct entry entry);
+void free_entry(struct entry *entry);

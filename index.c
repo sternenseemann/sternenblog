@@ -107,7 +107,7 @@ int make_index(const char *blog_dir, char *script_name, bool get_text, struct en
 
                 index_count++;
             } else {
-                free_entry(tmp_entry);
+                free_entry(&tmp_entry);
             }
         }
     }
@@ -125,7 +125,7 @@ int make_index(const char *blog_dir, char *script_name, bool get_text, struct en
 void free_index(struct entry *entries[], int count) {
     if(count > 0) {
         for(int i = 0; i < count; i++) {
-            free_entry(*(*entries + i));
+            free_entry(*entries + i);
         }
     }
 

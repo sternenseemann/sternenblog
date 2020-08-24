@@ -190,21 +190,26 @@ int entry_get_text(struct entry *entry) {
     return 0;
 }
 
-void free_entry(struct entry entry) {
-    if(entry.path != NULL) {
-        free(entry.path);
+void entry_unget_text(struct entry *entry) {
+    if(entry->text_size > 0 && entry->text != NULL &&
+       munmap(entry->text, entry->text_size) != -1) {
+        entry->text_size = -1;
+        entry->text = NULL;
+    }
+}
+
+void free_entry(struct entry *entry) {
+    if(entry->path != NULL) {
+        free(entry->path);
     }
 
-    if(entry.link != NULL) {
-        free(entry.link);
+    if(entry->link != NULL) {
+        free(entry->link);
     }
 
-    if(entry.title != NULL) {
-        free(entry.title);
+    if(entry->title != NULL) {
+        free(entry->title);
     }
 
-    if(entry.text != NULL) {
-        // TODO return value
-        munmap(entry.text, entry.text_size);
-    }
+    entry_get_text(entry);
 }

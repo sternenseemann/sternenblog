@@ -95,11 +95,6 @@
 #include "template.h"
 #include "xml.h"
 
-// TODO sandbox
-//      caching
-//      reduce memory usage by only using get_text in the inner loop
-//      and unmapping the file directly afterwards
-
 void send_standard_headers(int status, char content_type[]);
 
 /*!
@@ -166,7 +161,6 @@ int main(void) {
         template_error(500);
         template_footer();
 
-        // TODO exit failure on error?
         return EXIT_SUCCESS;
     }
 
@@ -217,12 +211,7 @@ void blog_index(char script_name[]) {
         for(int i = 0; i < count; i++) {
             if(entry_get_text(&entries[i]) != -1) {
                 template_index_entry(entries[i]);
-
-                // unmap file
-                if(munmap(entries[i].text, entries[i].text_size) != -1) {
-                    entries[i].text_size = -1;
-                    entries[i].text = NULL;
-                }
+                entry_unget_text(&entries[i]);
             }
         }
 
@@ -252,14 +241,14 @@ void blog_entry(char script_name[], char path_info[]) {
         template_footer();
     }
 
-    free_entry(entry);
+    free_entry(&entry);
 }
 
 void blog_rss(char script_name[]) {
     // index
     struct entry *entries = NULL;
 
-    int count = make_index(BLOG_DIR, script_name, 1, &entries);
+    int count = make_index(BLOG_DIR, script_name, 0, &entries);
 
     if(count < 0) {
         send_standard_headers(500, "text/plain");
@@ -315,38 +304,42 @@ void blog_rss(char script_name[]) {
     }
 
     for(int i = 0; i < count; i++) {
-        xml_open_tag(&ctx, "item");
-        xml_open_tag(&ctx, "title");
-        xml_escaped(&ctx, entries[i].title);
-        xml_close_tag(&ctx, "title");
+        if(entry_get_text(&entries[i]) != -1) {
+            xml_open_tag(&ctx, "item");
+            xml_open_tag(&ctx, "title");
+            xml_escaped(&ctx, entries[i].title);
+            xml_close_tag(&ctx, "title");
 
-        xml_open_tag(&ctx, "link");
-        xml_escaped(&ctx, BLOG_SERVER_URL);
-        xml_escaped(&ctx, entries[i].link);
-        xml_close_tag(&ctx, "link");
+            xml_open_tag(&ctx, "link");
+            xml_escaped(&ctx, BLOG_SERVER_URL);
+            xml_escaped(&ctx, entries[i].link);
+            xml_close_tag(&ctx, "link");
 
-        xml_open_tag(&ctx, "guid");
-        xml_escaped(&ctx, BLOG_SERVER_URL);
-        xml_escaped(&ctx, entries[i].link);
-        xml_close_tag(&ctx, "guid");
+            xml_open_tag(&ctx, "guid");
+            xml_escaped(&ctx, BLOG_SERVER_URL);
+            xml_escaped(&ctx, entries[i].link);
+            xml_close_tag(&ctx, "guid");
 
-        if(entries[i].text_size > 0) {
-            xml_open_tag(&ctx, "description");
-            xml_open_cdata(&ctx);
-            xml_raw(&ctx, entries[i].text);
-            xml_close_cdata(&ctx);
-            xml_close_tag(&ctx, "description");
+            if(entries[i].text_size > 0) {
+                xml_open_tag(&ctx, "description");
+                xml_open_cdata(&ctx);
+                xml_raw(&ctx, entries[i].text);
+                xml_close_cdata(&ctx);
+                xml_close_tag(&ctx, "description");
+            }
+
+            char strtime_entry[MAX_TIMESTR_SIZE];
+
+            if(flocaltime(strtime_entry, RSS_TIME_FORMAT, MAX_TIMESTR_SIZE, &entries[i].time) > 0) {
+                xml_open_tag(&ctx, "pubDate");
+                xml_escaped(&ctx, strtime_entry);
+                xml_close_tag(&ctx, "pubDate");
+            }
+
+            xml_close_tag(&ctx, "item");
+
+            entry_unget_text(&entries[i]);
         }
-
-        char strtime_entry[MAX_TIMESTR_SIZE];
-
-        if(flocaltime(strtime_entry, RSS_TIME_FORMAT, MAX_TIMESTR_SIZE, &entries[i].time) > 0) {
-            xml_open_tag(&ctx, "pubDate");
-            xml_escaped(&ctx, strtime_entry);
-            xml_close_tag(&ctx, "pubDate");
-        }
-
-        xml_close_tag(&ctx, "item");
     }
 
     xml_close_all(&ctx);
@@ -359,7 +352,7 @@ void blog_rss(char script_name[]) {
 void blog_atom(char script_name[]) {
     struct entry *entries = NULL;
 
-    int count = make_index(BLOG_DIR, script_name, 1, &entries);
+    int count = make_index(BLOG_DIR, script_name, 0, &entries);
 
     if(count < 0) {
         send_standard_headers(500, "text/plain");
@@ -431,37 +424,41 @@ void blog_atom(char script_name[]) {
     }
 
     for(int i = 0; i < count; i++) {
-        xml_open_tag(&ctx, "entry");
+        if(entry_get_text(&entries[i]) != -1) {
+            xml_open_tag(&ctx, "entry");
 
-        xml_open_tag(&ctx, "id");
-        xml_escaped(&ctx, BLOG_SERVER_URL);
-        xml_escaped(&ctx, entries[i].link);
-        xml_close_tag(&ctx, "id");
+            xml_open_tag(&ctx, "id");
+            xml_escaped(&ctx, BLOG_SERVER_URL);
+            xml_escaped(&ctx, entries[i].link);
+            xml_close_tag(&ctx, "id");
 
-        xml_open_tag(&ctx, "title");
-        xml_escaped(&ctx, entries[i].title);
-        xml_close_tag(&ctx, "title");
+            xml_open_tag(&ctx, "title");
+            xml_escaped(&ctx, entries[i].title);
+            xml_close_tag(&ctx, "title");
 
-        char strtime_entry[MAX_TIMESTR_SIZE];
-        if(flocaltime(strtime_entry, ATOM_TIME_FORMAT, MAX_TIMESTR_SIZE, &entries[i].time) > 0) {
-            xml_open_tag(&ctx, "updated");
-            xml_escaped(&ctx, strtime_entry);
-            xml_close_tag(&ctx, "updated");
+            char strtime_entry[MAX_TIMESTR_SIZE];
+            if(flocaltime(strtime_entry, ATOM_TIME_FORMAT, MAX_TIMESTR_SIZE, &entries[i].time) > 0) {
+                xml_open_tag(&ctx, "updated");
+                xml_escaped(&ctx, strtime_entry);
+                xml_close_tag(&ctx, "updated");
+            }
+
+            char *entry_url = catn_alloc(2, BLOG_SERVER_URL, entries[i].link);
+            if(entry_url != NULL) {
+                xml_empty_tag(&ctx, "link", 3, "rel", "alternate", "type", "text/html", "href", entry_url);
+                free(entry_url);
+            }
+
+            xml_open_tag_attrs(&ctx, "content", 1, "type", "html");
+            xml_open_cdata(&ctx);
+            xml_raw(&ctx, entries[i].text);
+            xml_close_cdata(&ctx);
+            xml_close_tag(&ctx, "content");
+
+            xml_close_tag(&ctx, "entry");
+
+            entry_unget_text(&entries[i]);
         }
-
-        char *entry_url = catn_alloc(2, BLOG_SERVER_URL, entries[i].link);
-        if(entry_url != NULL) {
-            xml_empty_tag(&ctx, "link", 3, "rel", "alternate", "type", "text/html", "href", entry_url);
-            free(entry_url);
-        }
-
-        xml_open_tag_attrs(&ctx, "content", 1, "type", "html");
-        xml_open_cdata(&ctx);
-        xml_raw(&ctx, entries[i].text);
-        xml_close_cdata(&ctx);
-        xml_close_tag(&ctx, "content");
-
-        xml_close_tag(&ctx, "entry");
     }
 
     xml_close_tag(&ctx, "feed");

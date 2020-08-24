@@ -46,6 +46,9 @@
 /*!
  * @name Site Metadata
  * @{
+ */
+
+/*!
  * @brief Site title
  *
  * Title of the site to serve.
@@ -82,6 +85,9 @@
 /*!
  * @name Caching
  * @{
+ */
+
+/*!
  * @brief TTL of RSS feed
  *
  * TTL (time to live) of the RSS feed in minutes. Feed readers may use this
@@ -97,6 +103,7 @@
  * @name Template settings
  * @{
  */
+
 /*!
  * @brief CSS url to use it `template/simple.c`
  *

@@ -65,35 +65,85 @@ although the latter, i. e. an absolute path, is recommended.
 .Pp
 Default value is
 .Pa /srv/sternenblog/ .
+.It Sy BLOG_SERVER_URL
+Public URL of the root of the server, i. e. public address or hostname and used
+protocol.
+This is used to construct global URLs to the entries for the RSS and Atom
+feeds.
+.Pp
+Default value is
+.Ql http://localhost .
+.It Sy BLOG_STRICT_ACCESS
+If set to
+.Ql 1
+.Nm
+will check if a file is either owned by the process's user or group before
+serving it.
+If it isn't, a 403 Forbidden error response will be generated.
+This is useful if you want to make it harder for yourself to
+publish entries by accident.
+Setting it to
+.Ql 0
+will disable the check.
+.Pp
+Default value is
+.Ql 1 .
 .It Sy BLOG_TITLE
 Title of the blog to serve, used in the RSS feed and the default template.
 .Pp
 Default value is
 .Ql my blog .
+.It Sy BLOG_AUTHOR
+Used to set the
+.Ql name
+element of the Atom feed's
+.Ql author
+element.
+Should contain the (human readable) name of the blog's author.
+.Pp
+This value is optional: If it's missing
+.Nm
+will use the username it is running as.
+.Pp
+Default value is
+.Ql Jane Doe .
 .It Sy BLOG_DESCRIPTION
 Used to set the
 .Ql description
-element of the RSS feed.
+element of the RSS and Atom feeds.
 .Pp
 Default value is
 .Ql my personal blog .
-.It Sy BLOG_SERVER_URL
-Public URL of the root of the server, i. e. public address or hostname and used
-protocol.
-This is used to construct global URLs to the entries for the RSS
-feed.
+.It Sy BLOG_CACHE_MAX_AGE
+Used to determine the value of
+.Ql max-age
+in the
+.Ql Cache-Control
+HTTP/1.1 header.
+The
+.Ql max-age
+is the number of seconds a response from the webserver is considered “fresh”.
+This roughly equates to the time a web browser will not request the same page
+again, but use the version from its cache. After that the cache might still be
+used, but the browser will try to find out if it changed (in this case
+.Nm
+will always reissue the response even if it did not change, since it doesn't
+support
+.Ql ETag
+and the likes).
+.Pp
+Setting this option can help reduce server load: If someone is browsing the
+served blog, the index page won't be regenerated every time they come back to
+it, but served from their browsers cache. Therefore the value should be longer
+than you expect users to spend time on your site.
+.Pp
+This value is optional: If not set, the
+.Ql
+Cache-Control
+header is not sent.
 .Pp
 Default value is
-.Ql http://localhost .
-.It Sy BLOG_RSS_TTL
-Used to set the
-.Ql ttl
-element of the RSS feed.
-The value (in minutes) can be used by feed readers to
-determine how often to refresh the RSS feed.
-.Pp
-Default value is
-.Ql 60 .
+.Ql 3600 .
 .It Sy BLOG_CSS
 Absolute path from the web root to the CSS stylesheet to be used by the default
 template.
@@ -289,6 +339,10 @@ The check is made using the effective UID and GID which are determined using
 The idea here is that
 .Xr chown 1
 has to be used actively for the entry files to be processed by
+.Nm .
+Note that this check can be disabled via the
+.Sx CONFIGURATION
+of
 .Nm .
 .Pp
 .Nm

@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +11,7 @@
 #include <unistd.h>
 
 #include "core.h"
+#include "config.h" // TODO: make independent?
 #include "cgiutil.h"
 #include "entry.h"
 
@@ -100,11 +102,14 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
 
     int regular_file = (file_info.st_mode & S_IFMT) == S_IFREG;
 
-    // refuse to process files that are not
-    // owned by the webserver's group or user
-    gid_t gid = getegid();
-    uid_t uid = geteuid();
-    int access = file_info.st_gid == gid || file_info.st_uid == uid;
+    // strict access check requires files to be owned by the webserver's
+    // group or user in order to be processed. can be disabled in config.h
+    bool access = !BLOG_STRICT_ACCESS;
+    if(BLOG_STRICT_ACCESS) {
+        gid_t gid = getegid();
+        uid_t uid = geteuid();
+        access = file_info.st_gid == gid || file_info.st_uid == uid;
+    }
 
     if(!access) {
         return http_errno(EACCES);

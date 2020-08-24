@@ -27,6 +27,20 @@
  */
 #define BLOG_SERVER_URL "http://localhost"
 
+/*!
+ * @brief Enable / Disable strict access check
+ *
+ * If enabled, sternenblog will only serve files which are either owned
+ * by the user or group it is running as. This usually means that in order
+ * to be served files must be `chown`ed to the group or user the webserver
+ * is running as. Consequently it is harder to accidentally make files public.
+ *
+ * If disabled, sternenblog will serve any file in `BLOG_DIR` it can read.
+ *
+ * @see BLOG_DIR
+ */
+#define BLOG_STRICT_ACCESS 1
+
 //! @}
 
 /*!

@@ -22,6 +22,7 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     // TODO: url encoding of links
 
     // intialize pointers
+    entry->time = 0;
     entry->link = NULL;
     entry->path = NULL;
     entry->title = NULL;
@@ -211,5 +212,5 @@ void free_entry(struct entry *entry) {
         free(entry->title);
     }
 
-    entry_get_text(entry);
+    entry_unget_text(entry);
 }

@@ -33,4 +33,4 @@ int make_index(const char *blog_dir, char *script_name, bool get_text, struct en
  * @param entries pointer to array of entries
  * @param count size of the given array
  */
-void free_index(struct entry *entries[], size_t count);
+void free_index(struct entry *entries[], int count);

@@ -122,9 +122,9 @@ int make_index(const char *blog_dir, char *script_name, bool get_text, struct en
     return index_count;
 }
 
-void free_index(struct entry *entries[], size_t count) {
+void free_index(struct entry *entries[], int count) {
     if(count > 0) {
-        for(size_t i = 0; i < count; i++) {
+        for(int i = 0; i < count; i++) {
             free_entry(*(*entries + i));
         }
     }

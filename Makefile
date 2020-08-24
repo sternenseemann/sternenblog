@@ -11,6 +11,8 @@ main.o: main.c core.h timeutil.h config.h
 $(TEMPLATE).o: $(TEMPLATE).c core.h config.h xml.h cgiutil.h timeutil.h
 	$(CC) $(CFLAGS) -I$(ROOT_DIR) -c -o $@ $<
 
+entry.o: config.h entry.c
+
 # only invoked if config.h does not exist
 config.h:
 	$(CP) config.example.h config.h

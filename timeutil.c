@@ -49,8 +49,6 @@ size_t flocaltime(char *b, enum time_format type, size_t size, const time_t *tim
             long real_offset = (-1) * timezone;
 
             if(daylight) {
-                struct tm *local = localtime(time);
-
                 // TODO is this correct in all cases?
                 if(local->tm_isdst == 1) {
                     real_offset += 3600;

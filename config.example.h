@@ -18,14 +18,15 @@
 #define BLOG_DIR "/srv/sternenblog/"
 
 /*!
- * @brief Public URL of the webserver
+ * @brief Wether the server uses https for sternenblog
  *
- * (External) URL the server that the script is running on is reachable via.
- * This should be the base URL of your webserver without any trailing slashes
- * or subpaths, as sternenblog will use SCRIPT_NAME and PATH_INFO to figure
- * out the path from the root of the server.
+ * sternenblog will use `BLOG_USE_HTTPS` when building an external
+ * URL to pages: If it is `1`, it will use `https://` as prefix, otherwise
+ * `http://`.
+ *
+ * This is currently only relevant for the RSS and Atom feeds.
  */
-#define BLOG_SERVER_URL "http://localhost"
+#define BLOG_USE_HTTPS 1
 
 /*!
  * @brief Enable / Disable strict access check

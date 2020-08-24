@@ -3,6 +3,8 @@
  * @brief Simple CGI/HTTP helper functions used by sternenblog.
  */
 
+#include <stdbool.h>
+
 /*!
  * @brief Print a HTTP header
  *
@@ -89,3 +91,5 @@ int http_errno(int err);
  * @return -1 on error, else size of buffer
  */
 int urlencode_realloc(char **input, int size);
+
+char *server_url(bool https);

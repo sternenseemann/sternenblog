@@ -65,14 +65,18 @@ although the latter, i. e. an absolute path, is recommended.
 .Pp
 Default value is
 .Pa /srv/sternenblog/ .
-.It Sy BLOG_SERVER_URL
-Public URL of the root of the server, i. e. public address or hostname and used
-protocol.
-This is used to construct global URLs to the entries for the RSS and Atom
-feeds.
+.It Sy BLOG_USE_HTTPS
+Wether the webserver is configured to serve
+.Nm
+via https or not.
+This information will be used whe building external URLs to entries in the RSS
+and Atom feeds to decide wether to prefix the URL with
+.Ql https://
+or
+.Ql http:// .
 .Pp
 Default value is
-.Ql http://localhost .
+.Ql 1 .
 .It Sy BLOG_STRICT_ACCESS
 If set to
 .Ql 1
@@ -254,6 +258,15 @@ Is expected to be the URL part after
 i. e. the path to a subpage of the script.
 This is interpreted as a path to an entry and must start with a leading
 .Ql / .
+.It Ev SERVER_NAME
+Expected to be the hostname or IP(v6) address of the server the request is
+directed to or
+.Nm
+is running on.
+.It Ev SERVER_PORT
+Expected to be the port of the server the request is directed to or
+.Nm
+is running on.
 .El
 .Pp
 Most likely these will be set correctly by your favorite web server without

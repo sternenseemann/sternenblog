@@ -267,9 +267,6 @@ void blog_rss(char script_name[]) {
     struct xml_context ctx;
     new_xml_context(&ctx);
 
-    ctx.closing_slash = 1;
-    ctx.warn = stderr; // dev
-
     xml_raw(&ctx, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
     xml_open_tag_attrs(&ctx, "rss", 2, "version", "2.0", "xmlns:atom", "http://www.w3.org/2005/Atom");
     xml_open_tag(&ctx, "channel");
@@ -284,9 +281,14 @@ void blog_rss(char script_name[]) {
     xml_close_cdata(&ctx);
     xml_close_tag(&ctx, "description");
 
-    xml_open_tag(&ctx, "link");
-    xml_escaped(&ctx, BLOG_SERVER_URL);
-    xml_close_tag(&ctx, "link");
+    char *external_url = server_url(BLOG_USE_HTTPS);
+
+    if(external_url != NULL) {
+        xml_open_tag(&ctx, "link");
+        xml_escaped(&ctx, external_url);
+        xml_escaped(&ctx, script_name);
+        xml_close_tag(&ctx, "link");
+    }
 
     if(count > 0) {
         time_t update_time = entries[0].time;
@@ -299,13 +301,15 @@ void blog_rss(char script_name[]) {
         }
     }
 
-    char *rss_link = catn_alloc(3, BLOG_SERVER_URL, script_name, "/rss.xml");
-    if(rss_link != NULL) {
-        xml_empty_tag(&ctx, "atom:link", 3,
-                      "rel", "self",
-                      "href", rss_link,
-                      "type", "application/rss+xml");
-        free(rss_link);
+    if(external_url != NULL) {
+        char *rss_link = catn_alloc(3, external_url, script_name, "/rss.xml");
+        if(rss_link != NULL) {
+            xml_empty_tag(&ctx, "atom:link", 3,
+                          "rel", "self",
+                          "href", rss_link,
+                          "type", "application/rss+xml");
+            free(rss_link);
+        }
     }
 
     for(int i = 0; i < count; i++) {
@@ -315,15 +319,17 @@ void blog_rss(char script_name[]) {
             xml_escaped(&ctx, entries[i].title);
             xml_close_tag(&ctx, "title");
 
-            xml_open_tag(&ctx, "link");
-            xml_escaped(&ctx, BLOG_SERVER_URL);
-            xml_escaped(&ctx, entries[i].link);
-            xml_close_tag(&ctx, "link");
+            if(external_url != NULL) {
+                xml_open_tag(&ctx, "link");
+                xml_escaped(&ctx, external_url);
+                xml_escaped(&ctx, entries[i].link);
+                xml_close_tag(&ctx, "link");
 
-            xml_open_tag(&ctx, "guid");
-            xml_escaped(&ctx, BLOG_SERVER_URL);
-            xml_escaped(&ctx, entries[i].link);
-            xml_close_tag(&ctx, "guid");
+                xml_open_tag(&ctx, "guid");
+                xml_escaped(&ctx, external_url);
+                xml_escaped(&ctx, entries[i].link);
+                xml_close_tag(&ctx, "guid");
+            }
 
             if(entries[i].text_size > 0) {
                 xml_open_tag(&ctx, "description");
@@ -349,6 +355,8 @@ void blog_rss(char script_name[]) {
 
     xml_close_all(&ctx);
 
+    free(external_url);
+
     free_index(&entries, count);
 
     del_xml_context(&ctx);
@@ -371,8 +379,9 @@ void blog_atom(char script_name[]) {
     struct xml_context ctx;
     new_xml_context(&ctx);
 
-    char *self_url = catn_alloc(3, BLOG_SERVER_URL, script_name, "/atom.xml");
-    char *html_url = catn_alloc(2, BLOG_SERVER_URL, script_name);
+    char *external_url = server_url(BLOG_USE_HTTPS);
+    char *self_url = catn_alloc(3, external_url, script_name, "/atom.xml");
+    char *html_url = catn_alloc(2, external_url, script_name);
 
     send_standard_headers(200, "application/atom+xml");
 
@@ -432,10 +441,12 @@ void blog_atom(char script_name[]) {
         if(entry_get_text(&entries[i]) != -1) {
             xml_open_tag(&ctx, "entry");
 
-            xml_open_tag(&ctx, "id");
-            xml_escaped(&ctx, BLOG_SERVER_URL);
-            xml_escaped(&ctx, entries[i].link);
-            xml_close_tag(&ctx, "id");
+            if(external_url != NULL) {
+                xml_open_tag(&ctx, "id");
+                xml_escaped(&ctx, external_url);
+                xml_escaped(&ctx, entries[i].link);
+                xml_close_tag(&ctx, "id");
+            }
 
             xml_open_tag(&ctx, "title");
             xml_escaped(&ctx, entries[i].title);
@@ -448,7 +459,7 @@ void blog_atom(char script_name[]) {
                 xml_close_tag(&ctx, "updated");
             }
 
-            char *entry_url = catn_alloc(2, BLOG_SERVER_URL, entries[i].link);
+            char *entry_url = catn_alloc(2, external_url, entries[i].link);
             if(entry_url != NULL) {
                 xml_empty_tag(&ctx, "link", 3, "rel", "alternate", "type", "text/html", "href", entry_url);
                 free(entry_url);
@@ -467,6 +478,8 @@ void blog_atom(char script_name[]) {
     }
 
     xml_close_tag(&ctx, "feed");
+
+    free(external_url);
 
     free_index(&entries, count);
     del_xml_context(&ctx);

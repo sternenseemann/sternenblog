@@ -115,3 +115,16 @@ int urlencode_realloc(char **input, int size) {
 
     return output_size;
 }
+
+char *server_url(bool https) {
+    char *server_name = getenv("SERVER_NAME");
+    char *server_port = getenv("SERVER_PORT");
+
+    if(server_name == NULL || server_port == NULL) {
+        return NULL;
+    }
+
+    char *proto = https ? "https://" : "http://";
+
+    return catn_alloc(4, proto, server_name, ":", server_port);
+}

@@ -1,10 +1,10 @@
+introduce better configuration mechanism | id:1f8f1bd3a99e6f394da4fbb508f1355759c2eeec
 rethink logging / debug output | id:5734e2717f28d80ac65d3f2123a0f46c01d4a0c1
 if possible determine BLOG_SERVER_URL automatically | id:5ad1fabab42a5776ab1446d09659c7a99a104245
 support markdown markup via lowdown | id:90c72d144f21d78d1b56790a927f6eea52df2a2c
-get rid of as many fixed size buffers as possible | id:9281f3a25aa08f6ba5d67c02e65cd0fb7f0a6b3c
 templating: give all functions context (index or not, SCRIPT_NAME, entry struct if applicable) | id:930c2e4f2c4c9ec3efef87b6ddd50a6ba6dd4903
-update user documentation to reflect recent config changes | id:ae716d655e71edede2a763bb7c0f6e1d369de571
 add tests for timeutil | id:b6cd0665e5c376f52cf9702698330308aa722031
+tests for xml.c | id:b9e91d022be6bdc70e7ab082743826370b713c72
 improve man3 situation | id:bf918930f6361c30f288c42894cbf9b0541c3340
 use errno instead of returning HTTP status codes in make_index | id:bfa35c48dcedbecd3a951eba243c4840178289ed
 templating: unify single_entry and index_entry | id:e6dcb195d890bb0b5186716808d806101d81e4f6

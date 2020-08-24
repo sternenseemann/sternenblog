@@ -182,9 +182,14 @@ void send_standard_headers(int status, char content_type[]) {
     send_header("Content-type", content_type);
 
 #ifdef BLOG_CACHE_MAX_AGE
+    // TODO correct sized buffer, no snprintf
     char max_age[256];
     int result = snprintf(max_age, sizeof max_age, "max-age=%d", BLOG_CACHE_MAX_AGE);
-    if(result > 0 && max_age[sizeof max_age - 1] == '\0') {
+
+    // make sure there won't be a buffer overrun
+    max_age[sizeof max_age - 1] = '\0';
+
+    if(result > 0) {
         send_header("Cache-Control", max_age);
     }
 #endif

@@ -18,10 +18,12 @@ The Request URL
 .Ql /sternenblog.cgi
 results in the index page being served,
 .Ql /sternenblog.cgi/rss.xml
-returns a RSS feed with the same contents as the index page and
-.Ql /sternenblog.cgi/my-entry
+returns a RSS feed with the same contents as the index page, likewise
+.Ql /sternenblog.cgi/atom.xml
+an atom feed and finally
+.Ql /sternenblog.cgi/<my-entry>
 serves the single entry page for
-.Pa /path/to/entry/directory/my-entry .
+.Pa /path/to/entry/directory/<my-entry> .
 .Pp
 Every entry is a regular file in the configured entry directory that meets
 certain criteria (see

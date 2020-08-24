@@ -54,10 +54,24 @@
 #define BLOG_TITLE "sternenblog"
 
 /*!
+ * @brief Site's Author
+ *
+ * Name of the author of the site served.
+ * Used to set the feed's author in the atom feed,
+ * ignored for RSS (since it is not recommended to
+ * use for single author feeds there which is the only type
+ * sternenblog can handle).
+ *
+ * Optional setting, if missing replaced by the username
+ * sternenblog is running as.
+ */
+#define BLOG_AUTHOR "Jane Doe"
+
+/*!
  * @brief Site description
  *
  * Description of the site to serve.
- * Will be used for the RSS feed and may be utilized by templates.
+ * Will be used for the feeds and may be utilized by templates.
  *
  * @see https://cyber.harvard.edu/rss/rss.html#requiredChannelElements
  */

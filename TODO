@@ -1,5 +1,4 @@
 make RSS_TTL optional | id:32a848e82d8b39bb8495f49d491882da320a3c7d
-atom feed | id:44aca4a04ff19c567e08968370cc535139807bbd
 add support for caching | id:472d68f1af5489020f4c5808e805822e3da77ffc
 rethink logging / debug output | id:5734e2717f28d80ac65d3f2123a0f46c01d4a0c1
 if possible determine BLOG_SERVER_URL automatically | id:5ad1fabab42a5776ab1446d09659c7a99a104245

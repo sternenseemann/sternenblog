@@ -7,39 +7,11 @@
 #include <template.h>
 #include <config.h>
 #include <cgiutil.h>
+#include <stringutil.h>
 #include <timeutil.h>
 #include <xml.h>
 
 static struct xml_context ctx;
-
-int make_link(char *buf, size_t size, char *abs_path) {
-    // TODO pass to template somehow?
-    char *script_name = getenv("SCRIPT_NAME");
-
-    if(script_name == NULL || buf == NULL || abs_path == NULL) {
-        return -1;
-    }
-
-    size_t script_name_len = strlen(script_name);
-    size_t abs_path_len = strlen(abs_path);
-
-    size_t min_buf_len = script_name_len + abs_path_len + 1;
-
-    if(min_buf_len > size) {
-        return -1;
-    }
-
-    if(script_name_len > 0) {
-        memcpy(buf, script_name, script_name_len);
-    }
-    if(abs_path_len > 0) {
-        memcpy(buf + script_name_len, abs_path, abs_path_len);
-    }
-
-    buf[script_name_len + abs_path_len] = '\0';
-
-    return min_buf_len;
-}
 
 void output_entry_time(struct xml_context *ctx, struct entry entry) {
     char strtime[MAX_TIMESTR_SIZE];
@@ -90,11 +62,26 @@ void template_footer(void) {
 
     xml_open_tag(&ctx, "footer");
 
-    char rss_link[256];
-    if(make_link(rss_link, sizeof rss_link, "/rss.xml") != -1) {
+    char *script_name = getenv("SCRIPT_NAME");
+    char *rss_link = catn_alloc(2, script_name, "/rss.xml");
+    char *atom_link = catn_alloc(2, script_name, "/atom.xml");
+
+    if(rss_link != NULL) {
         xml_open_tag_attrs(&ctx, "a", 1, "href", rss_link);
-        xml_raw(&ctx, "RSS Feed");
+        xml_escaped(&ctx, "RSS Feed");
         xml_close_tag(&ctx, "a");
+
+        free(rss_link);
+    }
+
+    if(atom_link != NULL) {
+        xml_raw(&ctx, " &bull; ");
+
+        xml_open_tag_attrs(&ctx, "a", 1, "href", atom_link);
+        xml_escaped(&ctx, "Atom Feed");
+        xml_close_tag(&ctx, "a");
+
+        free(atom_link);
     }
 
     xml_close_all(&ctx);

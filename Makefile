@@ -8,7 +8,7 @@ sternenblog.cgi: xml.o entry.o index.o stringutil.o cgiutil.o timeutil.o $(TEMPL
 main.o: main.c core.h timeutil.h config.h
 	$(CC) $(CFLAGS) -c -o main.o $<
 
-$(TEMPLATE).o: $(TEMPLATE).c core.h config.h xml.h cgiutil.h timeutil.h
+$(TEMPLATE).o: $(TEMPLATE).c core.h config.h xml.h cgiutil.h timeutil.h stringutil.h
 	$(CC) $(CFLAGS) -I$(ROOT_DIR) -c -o $@ $<
 
 entry.o: config.h entry.c

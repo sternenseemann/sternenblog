@@ -77,11 +77,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <pwd.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "core.h"
 #include "config.h"
@@ -128,8 +130,19 @@ void blog_entry(char script_name[], char path_info[]);
  * This function is called if `PATH_INFO` is `/rss.xml`.
  *
  * @see make_index
+ * @see blog_atom
  */
 void blog_rss(char script_name[]);
+
+/*!
+ * @brief Outputs the CGI response for the blog's Atom feed
+ *
+ * This function is called if `PATH_INFO` is `/atom.xml`.
+ *
+ * @see make_index
+ * @see blog_rss
+ */
+void blog_atom(char script_name[]);
 
 /*!
  * @brief Implements routing of requests
@@ -162,8 +175,7 @@ int main(void) {
     } else if(strcmp(path_info, "/rss.xml") == 0) {
         blog_rss(script_name);
     } else if(strcmp(path_info, "/atom.xml") == 0) {
-        // TODO
-        return EXIT_FAILURE;
+        blog_atom(script_name);
     } else {
         blog_entry(script_name, path_info);
     }
@@ -347,5 +359,123 @@ void blog_rss(char script_name[]) {
 
     free_index(&entries, count);
 
+    del_xml_context(&ctx);
+}
+
+void blog_atom(char script_name[]) {
+    struct entry *entries = NULL;
+
+    int count = make_index(BLOG_DIR, script_name, 1, &entries);
+
+    if(count < 0) {
+        send_header("Status", http_status_line(500));
+        send_header("Content-type", "text/plain");
+        terminate_headers();
+
+        puts("Internal Server Error");
+
+        free_index(&entries, count);
+        return;
+    }
+
+    struct xml_context ctx;
+    new_xml_context(&ctx);
+
+    char *self_url = catn_alloc(3, BLOG_SERVER_URL, script_name, "/atom.xml");
+    char *html_url = catn_alloc(2, BLOG_SERVER_URL, script_name);
+
+    send_header("Status", http_status_line(200));
+    send_header("Content-type", "application/atom+xml");
+    terminate_headers();
+
+    xml_raw(&ctx, "<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+    xml_open_tag_attrs(&ctx, "feed", 1, "xmlns", "http://www.w3.org/2005/Atom");
+
+    xml_open_tag(&ctx, "title");
+    xml_escaped(&ctx, BLOG_TITLE);
+    xml_close_tag(&ctx, "title");
+
+    if(self_url != NULL) {
+        xml_open_tag(&ctx, "id");
+        xml_escaped(&ctx, self_url);
+        xml_close_tag(&ctx, "id");
+
+        xml_empty_tag(&ctx, "link", 2, "rel", "self", "href", self_url);
+        free(self_url);
+    }
+
+    if(html_url != NULL) {
+        xml_empty_tag(&ctx, "link", 3, "rel", "alternate", "type", "text/html", "href", html_url);
+        // freed after author element
+    }
+
+    xml_open_tag(&ctx, "author");
+    xml_open_tag(&ctx, "name");
+#ifdef BLOG_AUTHOR
+    xml_escaped(&ctx, BLOG_AUTHOR);
+#else
+    struct passwd *user;
+    uid_t uid = geteuid();
+    user = getpwuid(uid);
+    xml_escaped(&ctx, user->pw_name);
+#endif
+    xml_close_tag(&ctx, "name");
+
+    if(html_url != NULL) {
+        xml_open_tag(&ctx, "uri");
+        xml_escaped(&ctx, html_url);
+        xml_close_tag(&ctx, "uri");
+        free(html_url);
+    }
+
+    xml_close_tag(&ctx, "author");
+
+    if(count > 0) {
+        time_t update_time = entries[0].time;
+        char strtime_update[MAX_TIMESTR_SIZE];
+        if(flocaltime(strtime_update, ATOM_TIME_FORMAT, MAX_TIMESTR_SIZE, &update_time) > 0) {
+            xml_open_tag(&ctx, "updated");
+            xml_escaped(&ctx, strtime_update);
+            xml_close_tag(&ctx, "updated");
+        }
+    }
+
+    for(int i = 0; i < count; i++) {
+        xml_open_tag(&ctx, "entry");
+
+        xml_open_tag(&ctx, "id");
+        xml_escaped(&ctx, BLOG_SERVER_URL);
+        xml_escaped(&ctx, entries[i].link);
+        xml_close_tag(&ctx, "id");
+
+        xml_open_tag(&ctx, "title");
+        xml_escaped(&ctx, entries[i].title);
+        xml_close_tag(&ctx, "title");
+
+        char strtime_entry[MAX_TIMESTR_SIZE];
+        if(flocaltime(strtime_entry, ATOM_TIME_FORMAT, MAX_TIMESTR_SIZE, &entries[i].time) > 0) {
+            xml_open_tag(&ctx, "updated");
+            xml_escaped(&ctx, strtime_entry);
+            xml_close_tag(&ctx, "updated");
+        }
+
+        char *entry_url = catn_alloc(2, BLOG_SERVER_URL, entries[i].link);
+        if(entry_url != NULL) {
+            xml_empty_tag(&ctx, "link", 3, "rel", "alternate", "type", "text/html", "href", entry_url);
+            free(entry_url);
+        }
+
+        xml_open_tag_attrs(&ctx, "content", 1, "type", "html");
+        xml_open_cdata(&ctx);
+        xml_raw(&ctx, entries[i].text);
+        xml_close_cdata(&ctx);
+        xml_close_tag(&ctx, "content");
+
+        xml_close_tag(&ctx, "entry");
+    }
+
+    xml_close_tag(&ctx, "feed");
+
+    free_index(&entries, count);
     del_xml_context(&ctx);
 }

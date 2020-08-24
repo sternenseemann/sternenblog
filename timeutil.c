@@ -40,7 +40,7 @@ size_t flocaltime(char *b, enum time_format type, size_t size, const time_t *tim
         size_t offset_size = 7;
         char offset[offset_size];
 
-        if(timezone == 0) {
+        if(timezone == 0 && !local->tm_isdst) {
             offset[0] = 'Z';
             offset[1] = '\0';
         } else {

@@ -37,19 +37,21 @@ char *catn_alloc(size_t n, ...) {
 
     for(size_t i = 0; i < n; i++) {
         char *str = va_arg(args, char *);
-        size_t copy_len = strlen(str) + (i + 1 == n ? 1 : 0);
+        if(str != NULL) {
+            size_t copy_len = strlen(str) + (i + 1 == n ? 1 : 0);
 
-        char *tmp = realloc(buffer, buffer_size + copy_len);
+            char *tmp = realloc(buffer, buffer_size + copy_len);
 
-        if(tmp == NULL) {
-            break;
-        } else {
-            buffer = tmp;
+            if(tmp == NULL) {
+                break;
+            } else {
+                buffer = tmp;
+            }
+
+            buffer_size += copy_len;
+            memcpy(buffer + pos, str, copy_len);
+            pos += copy_len;
         }
-
-        buffer_size += copy_len;
-        memcpy(buffer + pos, str, copy_len);
-        pos += copy_len;
     }
 
     if(buffer != NULL) {

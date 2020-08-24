@@ -88,14 +88,33 @@
  */
 
 /*!
- * @brief TTL of RSS feed
+ * @brief Time a browsers should cache a response of sternenblog
  *
- * TTL (time to live) of the RSS feed in minutes. Feed readers may use this
- * value to determine how often to refresh the RSS feed.
+ * Time in seconds that should be the value of the `max-age` field
+ * of the `Cache-Control` header. It determines the time in seconds
+ * a response of sternenblog should be considered “fresh”.
  *
- * @see https://cyber.harvard.edu/rss/rss.html#ltttlgtSubelementOfLtchannelgt
+ * During this time browsers will used the cached version of the
+ * response (if present) for a given URL. This is useful to reduce
+ * server load, since browsers will request resources less often
+ * which means they have to be generated less often as well
+ * (especially the index).
+ *
+ * The value should be at least the time you expect users to spend
+ * on your website although you might want to go lower if your
+ * website updates _very_ frequently.
+ *
+ * The header will also be set for the feeds, but the RSS
+ * `ttl` element won't be generated based on this value.
+ *
+ * Optional setting.
+ *
+ * Requires HTTP/1.1, but sternenblog won't check the used protocol version
+ * before sending this header.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
  */
-#define BLOG_RSS_TTL 60
+#define BLOG_CACHE_MAX_AGE 3600
 
 //! @}
 

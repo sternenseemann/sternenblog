@@ -100,6 +100,8 @@
 //      reduce memory usage by only using get_text in the inner loop
 //      and unmapping the file directly afterwards
 
+void send_standard_headers(int status, char content_type[]);
+
 /*!
  * @brief Outputs the CGI response for the index page of the blog
  *
@@ -158,9 +160,7 @@ int main(void) {
     if(script_name == NULL) {
         fputs("Missing SCRIPT_NAME", stderr);
 
-        send_header("Content-type", "text/html");
-        send_header("Status", "500 Internal Server Error");
-        terminate_headers();
+        send_standard_headers(500, "text/html");
 
         template_header();
         template_error(500);
@@ -183,23 +183,34 @@ int main(void) {
     return EXIT_SUCCESS;
 }
 
+void send_standard_headers(int status, char content_type[]) {
+    send_header("Status", http_status_line(status));
+    send_header("Content-type", content_type);
+
+#ifdef BLOG_CACHE_MAX_AGE
+    char max_age[256];
+    int result = snprintf(max_age, sizeof max_age, "max-age=%d", BLOG_CACHE_MAX_AGE);
+    if(result > 0 && max_age[sizeof max_age - 1] == '\0') {
+        send_header("Cache-Control", max_age);
+    }
+#endif
+
+    terminate_headers();
+}
+
 void blog_index(char script_name[]) {
     struct entry *entries = NULL;
 
     int count = make_index(BLOG_DIR, script_name, 0, &entries);
 
-    send_header("Content-type", "text/html");
-
     if(count < 0) {
-        send_header("Status", "500 Internal Server Error");
-        terminate_headers();
+        send_standard_headers(500, "text/html");
 
         template_header();
         template_error(500);
         template_footer();
     } else {
-        send_header("Status", "200 OK");
-        terminate_headers();
+        send_standard_headers(200, "text/html");
 
         template_header();
 
@@ -222,8 +233,6 @@ void blog_index(char script_name[]) {
 }
 
 void blog_entry(char script_name[], char path_info[]) {
-    send_header("Content-type", "text/html");
-
     struct entry entry;
     int status = make_entry(BLOG_DIR, script_name, path_info, &entry);
 
@@ -231,17 +240,13 @@ void blog_entry(char script_name[], char path_info[]) {
         status = 500;
     }
 
-    if(status != 200) {
-        send_header("Status", http_status_line(status));
-        terminate_headers();
+    send_standard_headers(status, "text/html");
 
+    if(status != 200) {
         template_header();
         template_error(status);
         template_footer();
     } else {
-        send_header("Status", "200 OK");
-        terminate_headers();
-
         template_header();
         template_single_entry(entry);
         template_footer();
@@ -257,17 +262,13 @@ void blog_rss(char script_name[]) {
     int count = make_index(BLOG_DIR, script_name, 1, &entries);
 
     if(count < 0) {
-        send_header("Status", "500 Internal Server Error");
-        send_header("Content-type", "text/plain");
-        terminate_headers();
+        send_standard_headers(500, "text/plain");
 
         puts("Internal Server Error");
         return;
     }
 
-    send_header("Status", "200 OK");
-    send_header("Content-type", "application/rss+xml");
-    terminate_headers();
+    send_standard_headers(200, "application/rss+xml");
 
     struct xml_context ctx;
     new_xml_context(&ctx);
@@ -302,13 +303,6 @@ void blog_rss(char script_name[]) {
             xml_escaped(&ctx, strtime_update);
             xml_close_tag(&ctx, "lastBuildDate");
         }
-    }
-
-    char ttl_string[32];
-    if(snprintf(ttl_string, sizeof ttl_string, "%d", BLOG_RSS_TTL) >= 0) {
-        xml_open_tag(&ctx, "ttl");
-        xml_escaped(&ctx, ttl_string);
-        xml_close_tag(&ctx, "ttl");
     }
 
     char *rss_link = catn_alloc(3, BLOG_SERVER_URL, script_name, "/rss.xml");
@@ -368,9 +362,7 @@ void blog_atom(char script_name[]) {
     int count = make_index(BLOG_DIR, script_name, 1, &entries);
 
     if(count < 0) {
-        send_header("Status", http_status_line(500));
-        send_header("Content-type", "text/plain");
-        terminate_headers();
+        send_standard_headers(500, "text/plain");
 
         puts("Internal Server Error");
 
@@ -384,9 +376,7 @@ void blog_atom(char script_name[]) {
     char *self_url = catn_alloc(3, BLOG_SERVER_URL, script_name, "/atom.xml");
     char *html_url = catn_alloc(2, BLOG_SERVER_URL, script_name);
 
-    send_header("Status", http_status_line(200));
-    send_header("Content-type", "application/atom+xml");
-    terminate_headers();
+    send_standard_headers(200, "application/atom+xml");
 
     xml_raw(&ctx, "<?xml version=\"1.0\" encoding=\"utf-8\"?>");
     xml_open_tag_attrs(&ctx, "feed", 1, "xmlns", "http://www.w3.org/2005/Atom");

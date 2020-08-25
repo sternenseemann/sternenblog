@@ -74,6 +74,7 @@
  *
  */
 #define _POSIX_C_SOURCE 200809L
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
@@ -189,6 +190,9 @@ int main(void) {
         }
     }
 
+    // confirm index is allocated if we are serving a feed
+    assert(is_feed == FEED_TYPE_NONE || page_type == PAGE_TYPE_INDEX);
+
     // construct index for feeds and index page
     if(page_type == PAGE_TYPE_INDEX) {
         count = make_index(BLOG_DIR, script_name, 0, &entries);
@@ -202,6 +206,8 @@ int main(void) {
         }
     }
 
+    // confirm status and page_type match
+    assert(status == 200 || page_type == PAGE_TYPE_ERROR);
     // render response
     if(page_type == PAGE_TYPE_ERROR) {
         send_standard_headers(status, "text/html");
@@ -214,6 +220,9 @@ int main(void) {
         send_standard_headers(200, "text/html");
 
         template_header();
+
+        // confirm that PAGE_TYPE_ENTRY → count == 1
+        assert(page_type != PAGE_TYPE_ENTRY || count == 1);
 
         for(int i = 0; i < count; i++) {
             if(entries[i].text != NULL || entry_get_text(&entries[i]) != -1) {

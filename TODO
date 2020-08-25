@@ -1,7 +1,6 @@
 introduce better configuration mechanism | id:1f8f1bd3a99e6f394da4fbb508f1355759c2eeec
 rethink logging / debug output | id:5734e2717f28d80ac65d3f2123a0f46c01d4a0c1
 support markdown markup via lowdown | id:90c72d144f21d78d1b56790a927f6eea52df2a2c
-templating: give all functions context (index or not, SCRIPT_NAME, entry struct if applicable) | id:930c2e4f2c4c9ec3efef87b6ddd50a6ba6dd4903
 add tests for timeutil | id:b6cd0665e5c376f52cf9702698330308aa722031
 tests for xml.c | id:b9e91d022be6bdc70e7ab082743826370b713c72
 improve man3 situation | id:bf918930f6361c30f288c42894cbf9b0541c3340

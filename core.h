@@ -32,3 +32,17 @@ struct entry {
     char *text;        //!< contents of the entry (mmap-ed file) or `NULL`
 };
 
+/*!
+ * @brief Type of a HTML response
+ *
+ * This enum describes the three types of HTML responses sternenblog can
+ * generate: a single entry, an index and an error page.
+ *
+ * Used internally for routing and passed to the template for context.
+ */
+enum page_type {
+  PAGE_TYPE_ENTRY,
+  PAGE_TYPE_INDEX,
+  PAGE_TYPE_ERROR
+};
+

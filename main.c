@@ -95,31 +95,28 @@
 #include "template.h"
 #include "xml.h"
 
+/*!
+ * @brief Routing enum to differentiate feeds
+ *
+ * Used in routing to differentiate between
+ *
+ * * Feeds (RSS vs. Atom)
+ * * Feeds and non-feeds (feeds are a special type of `PAGE_TYPE_INDEX`)
+ */
+enum feed_type {
+    FEED_TYPE_NONE,
+    FEED_TYPE_RSS,
+    FEED_TYPE_ATOM
+};
+
+/*!
+ * @brief Send terminated default header compound
+ *
+ * Sends `Status` and `Content-type` headers for the given
+ * values and a `Cache-Control` header if applicable before
+ * calling `terminate_headers()`.
+ */
 void send_standard_headers(int status, char content_type[]);
-
-/*!
- * @brief Outputs the CGI response for the index page of the blog
- *
- * This function is called if `PATH_INFO` is `/` or empty.
- *
- * @see template_index_entry
- * @see make_index
- */
-void blog_index(char script_name[]);
-
-/*!
- * @brief Outputs the CGI response for a single entry
- *
- * Called if no other special routes are found (index, RSS feed).
- * If `make_entry()` succeeds, the page for the entry is displayed
- * using `template_single_entry()`. If an error occurs,
- * `template_error()` is used.
- *
- * @see make_entry
- * @see template_single_entry
- * @see template_error
- */
-void blog_entry(char script_name[], char path_info[]);
 
 /*!
  * @brief Outputs the CGI response for the blog's RSS feed
@@ -129,7 +126,7 @@ void blog_entry(char script_name[], char path_info[]);
  * @see make_index
  * @see blog_atom
  */
-void blog_rss(char script_name[]);
+void blog_rss(char script_name[], struct entry *entries, int count);
 
 /*!
  * @brief Outputs the CGI response for the blog's Atom feed
@@ -139,7 +136,7 @@ void blog_rss(char script_name[]);
  * @see make_index
  * @see blog_rss
  */
-void blog_atom(char script_name[]);
+void blog_atom(char script_name[], struct entry *entries, int count);
 
 /*!
  * @brief Implements routing of requests
@@ -152,26 +149,89 @@ int main(void) {
     char *path_info = getenv("PATH_INFO");
     char *script_name = getenv("SCRIPT_NAME");
 
+    enum page_type page_type;
+    enum feed_type is_feed = FEED_TYPE_NONE;
+
+    struct entry *entries = NULL;
+    int count = 0;
+    int status = 500;
+
+    // Routing: determine page_type and feed_type
+    // already allocate data for single entries
     if(script_name == NULL) {
-        fputs("Missing SCRIPT_NAME", stderr);
+        fputs("Missing CGI environment variable SCRIPT_NAME\n", stderr);
+        page_type = PAGE_TYPE_ERROR;
+    } else if(path_info == NULL || path_info[0] == '\0' || strcmp(path_info, "/") == 0) {
+        // make sure clean URLs are generated
+        setenv("PATH_INFO", "", 1);
 
-        send_standard_headers(500, "text/html");
+        page_type = PAGE_TYPE_INDEX;
+    } else if(strcmp(path_info, "/rss.xml") == 0) {
+        is_feed = FEED_TYPE_RSS;
+        page_type = PAGE_TYPE_INDEX;
+    } else if(strcmp(path_info, "/atom.xml") == 0) {
+        page_type = PAGE_TYPE_INDEX;
+        is_feed = FEED_TYPE_ATOM;
+    } else {
+        // single entry is just a special index
+        entries = malloc(sizeof(struct entry));
+        if(entries == NULL) {
+            status = 500;
+        } else {
+            status = make_entry(BLOG_DIR, script_name, path_info, entries);
+        }
 
-        template_header();
-        template_error(500);
-        template_footer();
-
-        return EXIT_SUCCESS;
+        if(status == 200 && entry_get_text(entries) != -1) {
+            page_type = PAGE_TYPE_ENTRY;
+            count = 1;
+        } else {
+            page_type = PAGE_TYPE_ERROR;
+        }
     }
 
-    if(path_info == NULL || path_info[0] == '\0' || strcmp(path_info, "/") == 0) {
-        blog_index(script_name);
-    } else if(strcmp(path_info, "/rss.xml") == 0) {
-        blog_rss(script_name);
-    } else if(strcmp(path_info, "/atom.xml") == 0) {
-        blog_atom(script_name);
-    } else {
-        blog_entry(script_name, path_info);
+    // construct index for feeds and index page
+    if(page_type == PAGE_TYPE_INDEX) {
+        count = make_index(BLOG_DIR, script_name, 0, &entries);
+
+        if(count < 0) {
+            page_type = PAGE_TYPE_ERROR;
+            status = 500;
+        } else {
+            page_type = PAGE_TYPE_INDEX;
+            status = 200;
+        }
+    }
+
+    // render response
+    if(page_type == PAGE_TYPE_ERROR) {
+        send_standard_headers(status, "text/html");
+
+        template_header();
+        template_error(status);
+        template_footer();
+    } else if(is_feed == FEED_TYPE_NONE) {
+        // either PAGE_TYPE_INDEX or PAGE_TYPE_ENTRY
+        send_standard_headers(200, "text/html");
+
+        template_header();
+
+        for(int i = 0; i < count; i++) {
+            if(entries[i].text != NULL || entry_get_text(&entries[i]) != -1) {
+                template_index_entry(entries[i]);
+                entry_unget_text(&entries[i]);
+            }
+        }
+
+        template_footer();
+    } else if(is_feed == FEED_TYPE_RSS) {
+        blog_rss(script_name, entries, count);
+    } else if(is_feed == FEED_TYPE_ATOM) {
+        blog_atom(script_name, entries, count);
+    }
+
+    // clean up
+    if(entries != NULL) {
+        free_index(&entries, count);
     }
 
     return EXIT_SUCCESS;
@@ -197,71 +257,7 @@ void send_standard_headers(int status, char content_type[]) {
     terminate_headers();
 }
 
-void blog_index(char script_name[]) {
-    struct entry *entries = NULL;
-
-    int count = make_index(BLOG_DIR, script_name, 0, &entries);
-
-    if(count < 0) {
-        send_standard_headers(500, "text/html");
-
-        template_header();
-        template_error(500);
-        template_footer();
-    } else {
-        send_standard_headers(200, "text/html");
-
-        template_header();
-
-        for(int i = 0; i < count; i++) {
-            if(entry_get_text(&entries[i]) != -1) {
-                template_index_entry(entries[i]);
-                entry_unget_text(&entries[i]);
-            }
-        }
-
-        template_footer();
-
-        free_index(&entries, count);
-    }
-}
-
-void blog_entry(char script_name[], char path_info[]) {
-    struct entry entry;
-    int status = make_entry(BLOG_DIR, script_name, path_info, &entry);
-
-    if(status == 200 && entry_get_text(&entry) == -1) {
-        status = 500;
-    }
-
-    send_standard_headers(status, "text/html");
-
-    if(status != 200) {
-        template_header();
-        template_error(status);
-        template_footer();
-    } else {
-        template_header();
-        template_single_entry(entry);
-        template_footer();
-    }
-
-    free_entry(&entry);
-}
-
-void blog_rss(char script_name[]) {
-    // index
-    struct entry *entries = NULL;
-
-    int count = make_index(BLOG_DIR, script_name, 0, &entries);
-
-    if(count < 0) {
-        send_standard_headers(500, "text/plain");
-
-        puts("Internal Server Error");
-        return;
-    }
-
+void blog_rss(char script_name[], struct entry *entries, int count) {
     send_standard_headers(200, "application/rss+xml");
 
     struct xml_context ctx;
@@ -357,25 +353,10 @@ void blog_rss(char script_name[]) {
 
     free(external_url);
 
-    free_index(&entries, count);
-
     del_xml_context(&ctx);
 }
 
-void blog_atom(char script_name[]) {
-    struct entry *entries = NULL;
-
-    int count = make_index(BLOG_DIR, script_name, 0, &entries);
-
-    if(count < 0) {
-        send_standard_headers(500, "text/plain");
-
-        puts("Internal Server Error");
-
-        free_index(&entries, count);
-        return;
-    }
-
+void blog_atom(char script_name[], struct entry *entries, int count) {
     struct xml_context ctx;
     new_xml_context(&ctx);
 
@@ -481,6 +462,5 @@ void blog_atom(char script_name[]) {
 
     free(external_url);
 
-    free_index(&entries, count);
     del_xml_context(&ctx);
 }

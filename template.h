@@ -35,11 +35,11 @@
  * * `page_type == PAGE_TYPE_ERROR` → `entry == NULL`
  */
 struct template_data {
-  enum page_type page_type;       //! type of page to render
-  int status;                     //! HTTP status of the response
-  struct entry *entry;            //! Pointer to entry if applicable, else `NULL`
-  char *script_name;              //! value of `SCRIPT_NAME` environment variable
-  char *path_info;                //! value of `PATH_INFO` environment variable
+  enum page_type page_type;       //!< type of page to render
+  int status;                     //!< HTTP status of the response
+  struct entry *entry;            //!< Pointer to entry if applicable, else `NULL`
+  char *script_name;              //!< value of `SCRIPT_NAME` environment variable
+  char *path_info;                //!< value of `PATH_INFO` environment variable
 };
 
 /*!

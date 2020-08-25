@@ -208,34 +208,55 @@ int main(void) {
 
     // confirm status and page_type match
     assert(status == 200 || page_type == PAGE_TYPE_ERROR);
+    assert(page_type != PAGE_TYPE_ERROR || status != 200);
+
+    // initial contents of data, changed in loop for PAGE_TYPE_INDEX
+    struct template_data data;
+    data.page_type = page_type;
+    data.status = status;
+    data.script_name = script_name;
+    data.path_info = path_info;
+
+    // confirm that we have SCRIPT_NAME and PATH_INFO unless an error occurred
+    assert(data.page_type != PAGE_TYPE_ERROR ||
+           (data.path_info != NULL && data.script_name != NULL));
+
+    // make sure that PAGE_TYPE_ENTRY will have an entry set in template_header
+    if(count > 0) {
+        data.entry = entries;
+    } else {
+        data.entry = NULL;
+    }
+    assert(page_type != PAGE_TYPE_ENTRY || data.entry != NULL);
+
     // render response
     if(page_type == PAGE_TYPE_ERROR) {
         send_standard_headers(status, "text/html");
 
-        template_header();
-        template_error(status);
-        template_footer();
+        template_header(data);
+        template_main(data);
+        template_footer(data);
     } else if(is_feed == FEED_TYPE_NONE) {
         // either PAGE_TYPE_INDEX or PAGE_TYPE_ENTRY
         send_standard_headers(200, "text/html");
 
-        template_header();
+        template_header(data);
 
         // confirm that PAGE_TYPE_ENTRY → count == 1
         assert(page_type != PAGE_TYPE_ENTRY || count == 1);
 
         for(int i = 0; i < count; i++) {
             if(entries[i].text != NULL || entry_get_text(&entries[i]) != -1) {
-                if(page_type == PAGE_TYPE_INDEX) {
-                    template_index_entry(entries[i]);
-                } else {
-                    template_single_entry(entries[i]);
-                }
+                data.entry = &entries[i];
+                assert(data.entry != NULL);
+
+                template_main(data);
+
                 entry_unget_text(&entries[i]);
             }
         }
 
-        template_footer();
+        template_footer(data);
     } else if(is_feed == FEED_TYPE_RSS) {
         blog_rss(script_name, entries, count);
     } else if(is_feed == FEED_TYPE_ATOM) {

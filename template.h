@@ -21,6 +21,28 @@
  */
 
 /*!
+ * @brief (Meta) data about the page being served
+ *
+ * `struct template_data` is used to pass information about
+ * the current page to the template. It is received as the
+ * single argument by all template functions.
+ *
+ * The following assumptions about its contents can be made:
+ *
+ * * `page_type == PAGE_TYPE_ENTRY` → `entry != NULL`
+ * * `page_type == PAGE_TYPE_ERROR` ⟷ `status != 200`
+ * * `page_type != PAGE_TYPE_ERROR` → `script_name != NULL && path_info != NULL`
+ * * `page_type == PAGE_TYPE_ERROR` → `entry == NULL`
+ */
+struct template_data {
+  enum page_type page_type;       //! type of page to render
+  int status;                     //! HTTP status of the response
+  struct entry *entry;            //! Pointer to entry if applicable, else `NULL`
+  char *script_name;              //! value of `SCRIPT_NAME` environment variable
+  char *path_info;                //! value of `PATH_INFO` environment variable
+};
+
+/*!
  * @brief Prints beginning of HTML source
  *
  * template_header() is expected to print out the common beginning of
@@ -29,11 +51,16 @@
  * first template function).
  *
  * Typically it will print the HTML `<head>` and the header part
- * of the `<body>` element which is common for all pages.
+ * of the `<body>` element which is common for all pages. It may
+ * adjust some parts of it (like headings, title, navigations, …)
+ * depending on the `data` that is passed.
  *
- * If you are using `xml.h`, this is a good place to call new_xml_context().
+ * If `data.page_type == PAGE_TYPE_INDEX`, `data.entry` will point
+ * to the first entry or be `NULL` if there are no entries.
+ *
+ * @see struct template_data
  */
-void template_header(void);
+void template_header(struct template_data data);
 
 /*!
  * @brief Prints end of HTML source
@@ -44,54 +71,31 @@ void template_header(void);
  * Usually this involves printing a footer part of the web page and
  * closing the `<body>` and `<html>` elements.
  *
- * If you are using `xml.h`, this is a good place to call del_xml_context().
+ * If `data.page_type == PAGE_TYPE_INDEX`, `data.entry` will point
+ * to the last entry or be `NULL` if there are no entries.
  */
-void template_footer(void);
+void template_footer(struct template_data data);
 
 /*!
- * @brief Prints HTML snippet for a single entry on the index page
+ * @brief Prints HTML snippet for the main part of the page
  *
- * template_index_entry() is called for every entry that is part of
- * the index page. It should print out the repeating content structure
- * filled with the respective values for each entry.
+ * template_main() should print the main part of the HTML source
+ * which is located between template_header() and template_footer().
  *
- * It gets passed a fully constructed `struct entry` with its `text`
- * field populated, i. e. entry_get_text() has been called
+ * Depending on `data.page_type` the following applies:
  *
- * This function is essentially like template_single_entry(), but:
+ * * For `PAGE_TYPE_ENTRY` template_main() is called once and
+ *   should print the main part of a single entry page.
+ * * For `PAGE_TYPE_ERROR` template_main() is called once and
+ *   should print the main part of a page informing the user
+ *   about an occurred HTTP error (reflecting `data.status`).
+ * * For `PAGE_TYPE_INDEX` template_main() is called 0 to n
+ *   times where n is the number of total entries. Each time
+ *   it's called it should print a HTML snippet which is
+ *   suitable as an index entry. Furthermore it should be
+ *   valid HTML regardless how many times it has been called
+ *   before and will be called afterwards.
  *
- * * It must make sure to output appropriate and correct HTML
- *   if called repeatedly
- * * Should reflect that it's an index page, i. e. link to
- *   the entries' individual pages and maybe display less
- *   detail than single pages.
- *
- * @see template_index_entry
- * @see struct entry
- * @see entry_get_text
+ * @see struct template_data
  */
-void template_index_entry(struct entry entry);
-
-/*!
- * @brief Prints HTML snippet for an entry's own page
- *
- * template_single_entry() is like template_index_entry()
- * and receives a fully populated `struct entry` as well,
- * but it's a single page of an entry, so it may display
- * more details and link back to the index.
- *
- * @see struct entry
- * @see entry_get_text
- */
-void template_single_entry(struct entry entry);
-
-/*!
- * @brief Prints HTML snippet for an error page's main entry
- *
- * This should print main part of the page informing the user
- * about an error. It may display different messages depending
- * on the type of error.
- *
- * @param code HTTP status code of the error
- */
-void template_error(int code);
+void template_main(struct template_data data);

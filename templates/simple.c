@@ -18,12 +18,12 @@ void output_entry_time(struct xml_context *ctx, struct entry entry) {
 
     if(flocaltime(strtime, HTML_TIME_FORMAT_READABLE, MAX_TIMESTR_SIZE, &entry.time) > 0) {
         xml_open_tag_attrs(ctx, "time", 1, "datetime", strtime);
-        xml_raw(ctx, strtime);
+        xml_escaped(ctx, strtime);
         xml_close_tag(ctx, "time");
     }
 }
 
-void template_header(void) {
+void template_header(struct template_data data) {
     new_xml_context(&ctx);
     ctx.warn = stderr;
     ctx.closing_slash = 0;
@@ -43,7 +43,13 @@ void template_header(void) {
    #endif
 
     xml_open_tag(&ctx, "title");
-    xml_raw(&ctx, BLOG_TITLE);
+    xml_escaped(&ctx, BLOG_TITLE);
+    if(data.page_type == PAGE_TYPE_ENTRY) {
+       xml_escaped(&ctx, ": ");
+       xml_escaped(&ctx, data.entry->title);
+    } else if(data.page_type == PAGE_TYPE_ERROR) {
+       xml_escaped(&ctx, ": error");
+    }
     xml_close_tag(&ctx, "title");
 
     xml_close_tag(&ctx, "head");
@@ -51,20 +57,22 @@ void template_header(void) {
     xml_open_tag(&ctx, "body");
     xml_open_tag(&ctx, "header");
     xml_open_tag(&ctx, "h1");
-    xml_raw(&ctx, BLOG_TITLE);
+    if(data.page_type != PAGE_TYPE_INDEX && data.script_name != NULL) {
+       xml_open_tag_attrs(&ctx, "a", 1, "href", data.script_name);
+    }
+    xml_escaped(&ctx, BLOG_TITLE);
     xml_close_including(&ctx, "header");
 
     xml_open_tag(&ctx, "main");
 }
 
-void template_footer(void) {
+void template_footer(struct template_data data) {
     xml_close_tag(&ctx, "main");
 
     xml_open_tag(&ctx, "footer");
 
-    char *script_name = getenv("SCRIPT_NAME");
-    char *rss_link = catn_alloc(2, script_name, "/rss.xml");
-    char *atom_link = catn_alloc(2, script_name, "/atom.xml");
+    char *rss_link = catn_alloc(2, data.script_name, "/rss.xml");
+    char *atom_link = catn_alloc(2, data.script_name, "/atom.xml");
 
     if(rss_link != NULL) {
         xml_open_tag_attrs(&ctx, "a", 1, "href", rss_link);
@@ -89,77 +97,52 @@ void template_footer(void) {
     del_xml_context(&ctx);
 }
 
-void template_single_entry(struct entry entry) {
-    xml_open_tag(&ctx, "article");
+void template_main(struct template_data data) {
+    if(data.page_type == PAGE_TYPE_ERROR) {
+       xml_open_tag_attrs(&ctx, "div", 1, "class", "error-page");
+       xml_open_tag(&ctx, "h2");
+       xml_escaped(&ctx, "An error occured while handling your request");
+       xml_close_tag(&ctx, "h2");
 
-    if(entry.text_size > 0) {
-        xml_open_tag_attrs(&ctx, "div", 1, "class", "content");
-        xml_raw(&ctx, entry.text);
-        xml_close_tag(&ctx, "div");
-    }
+       xml_open_tag_attrs(&ctx, "div", 1, "class", "content");
+       xml_open_tag(&ctx, "p");
 
-    char *script_name = getenv("SCRIPT_NAME");
+       if(data.status == 500) {
+          xml_escaped(&ctx, "Something is wrong with this application and/or its server (error 500).");
+       } else if(data.status == 404) {
+          xml_escaped(&ctx, "What you requested doesn't exist (error 404).");
+       } else {
+          xml_escaped(&ctx, "The error encoutered is: ");
+          xml_escaped(&ctx, http_status_line(data.status));
+       }
 
-    xml_open_tag_attrs(&ctx, "div", 1, "class", "meta");
-    xml_open_tag(&ctx, "ul");
-
-    // time of publishing
-    xml_open_tag(&ctx, "li");
-    output_entry_time(&ctx, entry);
-    xml_close_tag(&ctx, "li");
-
-    // link back to index
-    xml_open_tag(&ctx, "li");
-    xml_open_tag_attrs(&ctx, "a", 1, "href", script_name);
-    xml_raw(&ctx, "Back");
-    xml_close_tag(&ctx, "a");
-    xml_close_tag(&ctx, "li");
-
-    xml_close_including(&ctx, "article");
-}
-
-void template_index_entry(struct entry entry) {
-    // TODO time?
-    xml_open_tag_attrs(&ctx, "article", 1, "id", entry.title);
-    if(entry.text_size > 0) {
-        xml_open_tag_attrs(&ctx, "div", 1, "class", "content index");
-        xml_raw(&ctx, entry.text);
-        xml_close_tag(&ctx, "div");
-    }
-
-    xml_open_tag_attrs(&ctx, "div", 1, "class", "meta index");
-    xml_open_tag(&ctx, "p");
-    xml_open_tag_attrs(&ctx, "a", 1, "href", entry.link);
-    xml_raw(&ctx, "Permalink");
-
-    xml_close_including(&ctx, "article");
-}
-
-void template_error(int status) {
-    xml_open_tag_attrs(&ctx, "div", 1, "class", "error-page");
-    xml_open_tag(&ctx, "h2");
-    xml_raw(&ctx, "An error occured while handling your request");
-    xml_close_tag(&ctx, "h2");
-
-    xml_open_tag(&ctx, "p");
-
-    if(status == 500) {
-        xml_raw(&ctx, "Something is wrong with this application and/or its server (error 500).");
-    } else if(status == 404) {
-        xml_raw(&ctx, "What you requested doesn't exist (error 404).");
+       xml_close_tag(&ctx, "p");
+       xml_close_tag(&ctx, "div");
+       xml_close_tag(&ctx, "div");
     } else {
-       xml_raw(&ctx, "The error encoutered is: ");
-       xml_raw(&ctx, http_status_line(status));
+
+       xml_open_tag(&ctx, "article");
+
+       xml_open_tag(&ctx, "h2");
+       if(data.page_type == PAGE_TYPE_INDEX) {
+          xml_open_tag_attrs(&ctx, "a", 1, "href", data.entry->link);
+       }
+       xml_escaped(&ctx, data.entry->title);
+       xml_close_including(&ctx, "h2");
+
+       if(data.entry->text_size > 0) {
+          xml_open_tag_attrs(&ctx, "div", 1, "class", "content");
+          xml_raw(&ctx, data.entry->text);
+          xml_close_tag(&ctx, "div");
+       }
+
+       xml_open_tag_attrs(&ctx, "div", 1, "class", "meta");
+
+       // modification time
+       xml_open_tag_attrs(&ctx, "p", 1, "class", "mtime");
+       output_entry_time(&ctx, *data.entry);
+       xml_close_tag(&ctx, "p");
+
+       xml_close_including(&ctx, "article");
     }
-
-    xml_close_tag(&ctx, "p");
-
-    char *script_name = getenv("SCRIPT_NAME");
-
-    xml_open_tag(&ctx, "nav");
-    xml_open_tag(&ctx, "p");
-    xml_open_tag_attrs(&ctx, "a", 1, "href", script_name);
-    xml_raw(&ctx, "Back");
-
-    xml_close_including(&ctx, "div");
 }

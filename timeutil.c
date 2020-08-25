@@ -66,8 +66,6 @@ size_t flocaltime(char *b, enum time_format type, size_t size, const time_t *tim
             long hour = abso / 3600;
             long minute = (abso % 3600) / 60;
 
-            fprintf(stderr, "%ld:%ld  (%ld)\n", hour, minute, real_offset);
-
             offset[0] = sign;
             offset[1] = nibble_hex((short) hour / 10);
             offset[2] = nibble_hex((short) hour % 10);

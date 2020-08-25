@@ -92,4 +92,20 @@ int http_errno(int err);
  */
 int urlencode_realloc(char **input, int size);
 
+/*!
+ * @brief Returns URL of server addressed by the current CGI request
+ *
+ * server_url() uses the CGI 1.1 environment variables `SERVER_NAME`
+ * and `SERVER_PORT` to construct an URL to the server the current
+ * request is addressed to. Since CGI only reveals the HTTP version
+ * used and not wether an encrypted version of HTTP is used,
+ * server_url() will use the parameter `https` to decide which protocol
+ * identifier to prefix.
+ *
+ * The returned `char *` is dynamically allocated and must be cleaned
+ * up using `free()` before it goes out of scope.
+ *
+ * @param https if true, prefix `https://` else `http://`
+ * @return Pointer to dynamically allocated char buffer containing the URL.
+ */
 char *server_url(bool https);

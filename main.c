@@ -217,7 +217,11 @@ int main(void) {
 
         for(int i = 0; i < count; i++) {
             if(entries[i].text != NULL || entry_get_text(&entries[i]) != -1) {
-                template_index_entry(entries[i]);
+                if(page_type == PAGE_TYPE_INDEX) {
+                    template_index_entry(entries[i]);
+                } else {
+                    template_single_entry(entries[i]);
+                }
                 entry_unget_text(&entries[i]);
             }
         }

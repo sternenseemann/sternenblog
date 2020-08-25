@@ -31,6 +31,12 @@ size_t flocaltime(char *b, enum time_format type, size_t size, const time_t *tim
 
     size_t res = strftime(b, size, format, local);
 
+    if(res == 0) {
+        return 0;
+    }
+
+    size_t offset_len = 0;
+
     if(type == ATOM_TIME_FORMAT || type == HTML_TIME_FORMAT_READABLE) {
         // for these formats we need to append a RFC3339 UTC offset
         // unfortunately it is *not* exactly provided by strftime,
@@ -43,6 +49,8 @@ size_t flocaltime(char *b, enum time_format type, size_t size, const time_t *tim
         if(timezone == 0 && !local->tm_isdst) {
             offset[0] = 'Z';
             offset[1] = '\0';
+
+            offset_len = 1;
         } else {
             // for some reason timezone is seconds *west* of UTC which
             // is inverse to how UTC offsets are denoted
@@ -73,6 +81,8 @@ size_t flocaltime(char *b, enum time_format type, size_t size, const time_t *tim
             offset[4] = nibble_hex((short) minute / 10);
             offset[5] = nibble_hex((short) minute % 10);
             offset[6] = '\0';
+
+            offset_len = 6;
         }
 
         if(res > 0 && res + offset_size <= size) {
@@ -83,5 +93,5 @@ size_t flocaltime(char *b, enum time_format type, size_t size, const time_t *tim
     // prevent any buffer overflows
     b[size - 1] = '\0';
 
-    return res;
+    return res + offset_len;
 }

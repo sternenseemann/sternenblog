@@ -3,13 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <core.h>
-#include <template.h>
 #include <config.h>
-#include <cgiutil.h>
-#include <stringutil.h>
-#include <timeutil.h>
-#include <xml.h>
+
+#include <sternenblog/core.h>
+#include <sternenblog/template.h>
+#include <sternenblog/cgiutil.h>
+#include <sternenblog/stringutil.h>
+#include <sternenblog/timeutil.h>
+#include <sternenblog/xml.h>
 
 static struct xml_context ctx;
 

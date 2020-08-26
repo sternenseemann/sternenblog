@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 #include "core.h"
-#include "config.h" // TODO: make independent?
+#include "../config.h" // TODO: make independent?
 #include "cgiutil.h"
 #include "entry.h"
 

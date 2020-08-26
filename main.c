@@ -86,15 +86,16 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "core.h"
 #include "config.h"
-#include "cgiutil.h"
-#include "entry.h"
-#include "index.h"
-#include "stringutil.h"
-#include "timeutil.h"
-#include "template.h"
-#include "xml.h"
+
+#include "sternenblog/core.h"
+#include "sternenblog/cgiutil.h"
+#include "sternenblog/entry.h"
+#include "sternenblog/index.h"
+#include "sternenblog/stringutil.h"
+#include "sternenblog/timeutil.h"
+#include "sternenblog/template.h"
+#include "sternenblog/xml.h"
 
 /*!
  * @brief Routing enum to differentiate feeds

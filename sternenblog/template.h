@@ -2,8 +2,6 @@
  * @file template.h
  * @brief Declarations of functions to be implemented by a sternenblog template
  *
- * Requires prior inclusion of core.h.
- *
  * The functions declared in template.h are called by `blog_index()`
  * and `blog_entry()` to generate the HTML document CGI responses
  * involving HTML (contrary to the RSS feed which is independent
@@ -19,6 +17,11 @@
  *   of times) or template_error()
  * * template_footer()
  */
+
+#ifndef STERNENBLOG_TEMPLATE_H
+#define STERNENBLOG_TEMPLATE_H
+
+#include "core.h"
 
 /*!
  * @brief (Meta) data about the page being served
@@ -99,3 +102,5 @@ void template_footer(struct template_data data);
  * @see struct template_data
  */
 void template_main(struct template_data data);
+
+#endif

@@ -30,6 +30,10 @@
  *
  * @include xml_example.c
  */
+
+#ifndef STERNENBLOG_XML_H
+#define STERNENBLOG_XML_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -338,3 +342,5 @@ void xml_open_cdata(struct xml_context *ctx);
  * @see xml_open_cdata
  */
 void xml_close_cdata(struct xml_context *ctx);
+
+#endif

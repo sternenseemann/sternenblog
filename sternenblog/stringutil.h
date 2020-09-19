@@ -3,6 +3,9 @@
  * @brief Utilities for string construction
  */
 
+#ifndef STERNENBLOG_STRINGUTIL_H
+#define STERNENBLOG_STRINGUTIL_H
+
 /*!
  * @brief Returns hex digit for given integer
  *
@@ -25,3 +28,5 @@ char nibble_hex(short h);
  * @return pointer to concatenated strings or `NULL` on error.
  */
 char *catn_alloc(size_t n, ...);
+
+#endif

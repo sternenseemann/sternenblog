@@ -1,9 +1,12 @@
 /*!
  * @file entry.h
  * @brief Construction and destruction of entries
- *
- * Requires prior inclusion of core.h.
  */
+
+#ifndef STERNENBLOG_ENTRY_H
+#define STERNENBLOG_ENTRY_H
+
+#include "core.h"
 
 /*!
  * @brief Construct an entry for a given `PATH_INFO`
@@ -107,3 +110,5 @@ void entry_unget_text(struct entry *entry);
  * @see entry_unget_text
  */
 void free_entry(struct entry *entry);
+
+#endif

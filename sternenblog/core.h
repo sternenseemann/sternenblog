@@ -2,6 +2,10 @@
  * @file core.h
  * @brief Central type definitions of sternenblog
  */
+
+#ifndef STERNENBLOG_CORE_H
+#define STERNENBLOG_CORE_H
+
 #include <time.h>
 
 /*!
@@ -46,3 +50,4 @@ enum page_type {
   PAGE_TYPE_ERROR
 };
 
+#endif

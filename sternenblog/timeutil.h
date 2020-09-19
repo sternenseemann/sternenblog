@@ -2,6 +2,10 @@
  * @file
  * @brief Utilities for rendering timestamps as strings
  */
+
+#ifndef STERNENBLOG_TIMEUTIL_H
+#define STERNENBLOG_TIMEUTIL_H
+
 enum time_format {
     RSS_TIME_FORMAT,          //!< RFC822 formatted time with 4 instead of 2 year digits
     ATOM_TIME_FORMAT,         //!< RFC3339 formatted time
@@ -41,3 +45,5 @@ enum time_format {
  * @return `0` on error, otherwise length of the string placed in `b` excluding terminating `NUL` byte
  */
 size_t flocaltime(char *b, enum time_format type, size_t size, const time_t *time);
+
+#endif

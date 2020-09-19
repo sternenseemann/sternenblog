@@ -3,6 +3,9 @@
  * @brief Simple CGI/HTTP helper functions used by sternenblog.
  */
 
+#ifndef STERNENBLOG_CGIUTIL_H
+#define STERNENBLOG_CGIUTIL_H
+
 #include <stdbool.h>
 
 /*!
@@ -109,3 +112,5 @@ int urlencode_realloc(char **input, int size);
  * @return Pointer to dynamically allocated char buffer containing the URL.
  */
 char *server_url(bool https);
+
+#endif

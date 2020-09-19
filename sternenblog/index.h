@@ -1,9 +1,12 @@
 /*!
  * @file index.h
  * @brief Construction and destruction of entry indices
- *
- * Requires prior inclusion of core.h.
  */
+
+#ifndef STERNENBLOG_INDEX_H
+#define STERNENBLOG_INDEX_H
+
+#include "core.h"
 #include <stdbool.h>
 
 /*!
@@ -34,3 +37,5 @@ int make_index(const char *blog_dir, char *script_name, bool get_text, struct en
  * @param count size of the given array
  */
 void free_index(struct entry *entries[], int count);
+
+#endif

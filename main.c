@@ -216,10 +216,14 @@ int main(void) {
     data.page_type = page_type;
     data.status = status;
     data.script_name = script_name;
-    data.path_info = path_info;
+    if(path_info == NULL) {
+        data.path_info = "";
+    } else {
+        data.path_info = path_info;
+    }
 
     // confirm that we have SCRIPT_NAME and PATH_INFO unless an error occurred
-    assert(data.page_type != PAGE_TYPE_ERROR ||
+    assert(data.page_type == PAGE_TYPE_ERROR ||
            (data.path_info != NULL && data.script_name != NULL));
 
     // make sure that PAGE_TYPE_ENTRY will have an entry set in template_header

@@ -165,7 +165,7 @@ int main(void) {
         page_type = PAGE_TYPE_ERROR;
     } else if(path_info == NULL || path_info[0] == '\0' || strcmp(path_info, "/") == 0) {
         // make sure clean URLs are generated
-        setenv("PATH_INFO", "", 1);
+        setenv("PATH_INFO", "/", 1);
 
         page_type = PAGE_TYPE_INDEX;
     } else if(strcmp(path_info, "/rss.xml") == 0) {

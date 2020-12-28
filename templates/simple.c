@@ -58,8 +58,15 @@ void template_header(struct template_data data) {
     xml_open_tag(&ctx, "body");
     xml_open_tag(&ctx, "header");
     xml_open_tag(&ctx, "h1");
-    if(data.page_type != PAGE_TYPE_INDEX && data.script_name != NULL) {
-       xml_open_tag_attrs(&ctx, "a", 1, "href", data.script_name);
+    if(data.page_type != PAGE_TYPE_INDEX) {
+      char *index;
+      if(data.script_name == NULL || data.script_name[0] == '\0') {
+        index = "/";
+      } else {
+        index = data.script_name;
+      }
+
+      xml_open_tag_attrs(&ctx, "a", 1, "href", index);
     }
     xml_escaped(&ctx, BLOG_TITLE);
     xml_close_including(&ctx, "header");

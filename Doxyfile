@@ -26,4 +26,3 @@ EXAMPLE_PATH           = ./doc/examples/
 # hack to allow @include simple.c
 EXAMPLE_PATH          += ./templates/
 EXCLUDE_SYMBOLS        = _POSIX_C_SOURCE
-RECURSIVE              = YES

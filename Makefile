@@ -2,24 +2,22 @@ include config.mk
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-TEMPLATE_API = sternenblog/core.h config.h sternenblog/xml.h sternenblog/cgiutil.h sternenblog/timeutil.h sternenblog/stringutil.h
-
 sternenblog.cgi: xml.o entry.o index.o stringutil.o cgiutil.o timeutil.o $(TEMPLATE).o main.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-main.o: main.c sternenblog/core.h config.h
+main.o: main.c core.h timeutil.h config.h
 	$(CC) $(CFLAGS) -c -o main.o $<
 
-$(TEMPLATE).o: $(TEMPLATE).c $(TEMPLATE_API)
+$(TEMPLATE).o: $(TEMPLATE).c core.h config.h xml.h cgiutil.h timeutil.h stringutil.h
 	$(CC) $(CFLAGS) -I$(ROOT_DIR) -c -o $@ $<
 
-entry.o: config.h sternenblog/entry.c sternenblog/entry.h
+entry.o: config.h entry.c
 
 # only invoked if config.h does not exist
 config.h:
 	$(CP) config.example.h config.h
 
-%.o: sternenblog/%.c sternenblog/%.h
+%.o: %.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:

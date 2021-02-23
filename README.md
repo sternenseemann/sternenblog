@@ -2,6 +2,12 @@
 
 🌟blog — file based CGI blog software
 
+## features
+
+mainly two things make sternenblog kind of unique: a) it uses `mtime`
+for datetime information of entries and b) it is written in C (for
+better or worse).
+
 ## user documentation
 
 sternenblog is documented in `sternenblog.cgi(1)` which you can read using

@@ -78,20 +78,9 @@ void template_footer(struct template_data data) {
 
     xml_open_tag(&ctx, "footer");
 
-    char *rss_link = catn_alloc(2, data.script_name, "/rss.xml");
     char *atom_link = catn_alloc(2, data.script_name, "/atom.xml");
 
-    if(rss_link != NULL) {
-        xml_open_tag_attrs(&ctx, "a", 1, "href", rss_link);
-        xml_escaped(&ctx, "RSS Feed");
-        xml_close_tag(&ctx, "a");
-
-        free(rss_link);
-    }
-
     if(atom_link != NULL) {
-        xml_raw(&ctx, " &bull; ");
-
         xml_open_tag_attrs(&ctx, "a", 1, "href", atom_link);
         xml_escaped(&ctx, "Atom Feed");
         xml_close_tag(&ctx, "a");

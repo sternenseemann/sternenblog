@@ -130,7 +130,7 @@ int main(void) {
     int count = 0;
     int status = 500;
 
-    // Routing: determine page_type and feed_type
+    // Routing: determine page_type
     // already allocate data for single entries
     if(script_name == NULL) {
         fputs("Missing CGI environment variable SCRIPT_NAME\n", stderr);
@@ -143,6 +143,20 @@ int main(void) {
     } else if(strcmp(path_info, "/atom.xml") == 0) {
         page_type = PAGE_TYPE_FEED;
     } else {
+        page_type = PAGE_TYPE_ENTRY;
+    }
+
+    // populate data necessary for responses or switch to error page type
+    if(page_type == PAGE_TYPE_INDEX || page_type == PAGE_TYPE_FEED) {
+        count = make_index(BLOG_DIR, script_name, 0, &entries);
+
+        if(count < 0) {
+            page_type = PAGE_TYPE_ERROR;
+            status = 500;
+        } else {
+            status = 200;
+        }
+    } else {
         // single entry is just a special index
         entries = malloc(sizeof(struct entry));
         if(entries == NULL) {
@@ -152,22 +166,9 @@ int main(void) {
         }
 
         if(status == 200 && entry_get_text(entries) != -1) {
-            page_type = PAGE_TYPE_ENTRY;
             count = 1;
         } else {
             page_type = PAGE_TYPE_ERROR;
-        }
-    }
-
-    // construct index for feeds and index page
-    if(page_type == PAGE_TYPE_INDEX || page_type == PAGE_TYPE_FEED) {
-        count = make_index(BLOG_DIR, script_name, 0, &entries);
-
-        if(count < 0) {
-            page_type = PAGE_TYPE_ERROR;
-            status = 500;
-        } else {
-            status = 200;
         }
     }
 

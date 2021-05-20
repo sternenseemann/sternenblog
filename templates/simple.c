@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-#include <core.h>
+#include <entry.h>
 #include <template.h>
 #include <config.h>
 #include <cgiutil.h>

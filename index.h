@@ -6,8 +6,9 @@
 #ifndef STERNENBLOG_INDEX_H
 #define STERNENBLOG_INDEX_H
 
-#include "core.h"
 #include <stdbool.h>
+
+#include "entry.h"
 
 /*!
  * @brief Build index of given `blog_dir`

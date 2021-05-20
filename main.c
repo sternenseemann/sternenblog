@@ -49,7 +49,7 @@
  *
  * @subsection int_doc Internals
  *
- * core.h defines the central type of sternenblog, `struct entry`.
+ * entry.h defines the central type of sternenblog, `struct entry`.
  * Entries is essentially all sternenblog knows and handles.
  * It either builds an index (listing) of them using `make_index()`
  * from index.h or gets a single one using `make_entry()` from entry.h
@@ -86,7 +86,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "core.h"
 #include "config.h"
 #include "cgiutil.h"
 #include "entry.h"

@@ -32,7 +32,7 @@ the possible customizations are detailed in the
 ## templating and development
 
 templating is unstable at the moment. for the current state
-you have to refer to `core.h` and `template.h`.
+you have to refer to `entry.h` and `template.h`.
 
 you can generate documentation from all source files using `make doc`
 which requires `doxygen` to be installed.

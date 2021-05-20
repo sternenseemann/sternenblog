@@ -6,8 +6,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "core.h"
-#include "entry.h"
 #include "index.h"
 
 /*!

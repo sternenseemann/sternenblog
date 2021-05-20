@@ -21,7 +21,24 @@
 #ifndef STERNENBLOG_TEMPLATE_H
 #define STERNENBLOG_TEMPLATE_H
 
-#include "core.h"
+/*!
+ * @brief Supported response types
+ *
+ * This enum describes the types of responses sternenblog can generate:
+ *
+ * * a single entry
+ * * an index
+ * * an error page
+ * * a (atom) feed
+ *
+ * Used internally for routing and passed to the template for context.
+ */
+enum page_type {
+  PAGE_TYPE_ENTRY,
+  PAGE_TYPE_INDEX,
+  PAGE_TYPE_ERROR,
+  PAGE_TYPE_FEED,
+};
 
 /*!
  * @brief (Meta) data about the page being served

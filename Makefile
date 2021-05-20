@@ -5,10 +5,10 @@ ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 sternenblog.cgi: xml.o entry.o index.o stringutil.o cgiutil.o timeutil.o $(TEMPLATE).o main.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-main.o: main.c core.h timeutil.h config.h
+main.o: main.c timeutil.h config.h
 	$(CC) $(CFLAGS) -c -o main.o $<
 
-$(TEMPLATE).o: $(TEMPLATE).c core.h config.h xml.h cgiutil.h timeutil.h stringutil.h
+$(TEMPLATE).o: $(TEMPLATE).c config.h xml.h cgiutil.h timeutil.h stringutil.h
 	$(CC) $(CFLAGS) -I$(ROOT_DIR) -c -o $@ $<
 
 entry.o: config.h entry.c
@@ -38,7 +38,6 @@ install: assets/favicon.ico assets/sternenblog.css doc sternenblog.cgi
 	$(INSTALL) -Dm644 assets/favicon.ico --target-directory $(PREFIX)$(WEB_PATH)/
 	# man pages
 	$(INSTALL) -Dm644 doc/man/man1/sternenblog.cgi.1 --target-directory $(PREFIX)$(MAN_PATH)/man1/
-	$(INSTALL) -Dm644 doc/man/man3/core.h.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
 	$(INSTALL) -Dm644 doc/man/man3/config.example.h.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
 	$(INSTALL) -Dm644 doc/man/man3/template.h.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/
 	$(INSTALL) -Dm644 doc/man/man3/xml.h.3 --target-directory $(PREFIX)$(MAN_PATH)/man3/

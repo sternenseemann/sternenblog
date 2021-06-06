@@ -10,15 +10,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "error.h"
 #include "config.h" // TODO: make independent?
 #include "cgiutil.h"
 #include "entry.h"
 
 int make_entry(const char *blog_dir, char *script_name, char *path_info, struct entry *entry) {
     // TODO: allow subdirectories?
-    // TODO: no status code return?
-
-    // TODO: url encoding of links
 
     // intialize pointers
     entry->time = 0;
@@ -33,7 +31,7 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     // validate path_info
     if(path_info == NULL) {
         fprintf(stderr, "Missing PATH_INFO\n");
-        return 500;
+        return STERNENBLOG_ERROR_CGI;
     }
 
     size_t path_info_len = strlen(path_info);
@@ -42,7 +40,7 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     // as per RFC3875 expect it to start with a slash
     if(path_info_len == 0 || path_info[0] != '/') {
         fprintf(stderr, "Malformed PATH_INFO: \"%s\"\n", path_info);
-        return 400;
+        return STERNENBLOG_ERROR_REQUEST;
     }
 
     // check if the path_info segments are alright
@@ -54,11 +52,11 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
                 case '/':
                     // TODO: necessary?
                     fprintf(stderr, "Double slash in PATH_INFO: \"%s\"\n", path_info);
-                    return 400;
+                    return STERNENBLOG_ERROR_REQUEST;
                     break;
                 case '.':
                     fprintf(stderr, "Dot file or dir in PATH_INFO: \"%s\"\n", path_info);
-                    return 403;
+                    return STERNENBLOG_ERROR_FORBIDDEN;
                     break;
                 default:
                     last_was_slash = 0;
@@ -71,7 +69,7 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     // set title (PATH_INFO without the slash)
     if(path_info_len < 2) {
         // shouldn't be called with just "/"
-        return 500;
+        return STERNENBLOG_ERROR_UNEXPECTED;
     }
 
     // title length is exactly path_info_len (-1 for slash, +1 for null byte)
@@ -97,7 +95,7 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     memset(&file_info, 0, sizeof(struct stat));
 
     if(stat(entry->path, &file_info) == -1) {
-        return http_errno(errno);
+        return error_from_errno();
     }
 
     int regular_file = (file_info.st_mode & S_IFMT) == S_IFREG;
@@ -112,9 +110,9 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     }
 
     if(!access) {
-        return http_errno(EACCES);
+        return STERNENBLOG_ERROR_FORBIDDEN;
     } else if(!regular_file) {
-        return http_errno(ENOENT);
+        return STERNENBLOG_ERROR_NOT_FOUND;
     }
 
     // use POSIX compatible version, since we don't need nanoseconds
@@ -123,7 +121,7 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     // build the link using SCRIPT_NAME
     if(script_name == NULL) {
         fprintf(stderr, "Missing SCRIPT_NAME\n");
-        return 500;
+        return STERNENBLOG_ERROR_CGI;
     }
 
     // don't check SCRIPT_NAME validity, since we
@@ -143,51 +141,54 @@ int make_entry(const char *blog_dir, char *script_name, char *path_info, struct 
     entry->link[link_size - 1] = '\0';
 
     if(urlencode_realloc(&entry->link, link_size) <= 0) {
-        return 500;
+        return STERNENBLOG_ERROR_SYSTEM;
     }
 
-    return 200;
+    return STERNENBLOG_OK;
 }
 
 int entry_get_text(struct entry *entry) {
-    // TODO set errno correctly in all cases
     if(entry->text != NULL) {
         // nothing to do
-        return 0;
+        return STERNENBLOG_OK;
     }
 
     int fd = open(entry->path, O_RDONLY);
 
     if(fd == -1) {
-        return -1;
+        return error_from_errno();
     }
 
     struct stat file_info;
 
     if(fstat(fd, &file_info) == -1) {
-        return -1;
+        return error_from_errno();
     }
 
     if(file_info.st_size == 0) {
         close(fd);
-        return 0;
+        return STERNENBLOG_OK;
     }
 
     entry->text = mmap(NULL, file_info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
     if(entry->text == MAP_FAILED) {
+        int old_errno = errno;
+
         entry->text = NULL;
         close(fd);
-        return -1;
+
+        errno = old_errno;
+        return STERNENBLOG_ERROR_SYSTEM;
     }
 
     entry->text_size = file_info.st_size;
 
     if(close(fd) == -1) {
-        return -1;
+        return STERNENBLOG_ERROR_SYSTEM;
     }
 
-    return 0;
+    return STERNENBLOG_OK;
 }
 
 void entry_unget_text(struct entry *entry) {

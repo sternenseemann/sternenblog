@@ -86,6 +86,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "error.h"
 #include "config.h"
 #include "cgiutil.h"
 #include "entry.h"
@@ -127,7 +128,7 @@ int main(void) {
 
     struct entry *entries = NULL;
     int count = 0;
-    int status = 500;
+    int status = STERNENBLOG_ERROR_UNEXPECTED;
 
     // Routing: determine page_type
     // already allocate data for single entries
@@ -147,24 +148,24 @@ int main(void) {
 
     // populate data necessary for responses or switch to error page type
     if(page_type == PAGE_TYPE_INDEX || page_type == PAGE_TYPE_FEED) {
-        count = make_index(BLOG_DIR, script_name, 0, &entries);
+        status = make_index(BLOG_DIR, script_name, 0, &entries);
 
-        if(count < 0) {
-            page_type = PAGE_TYPE_ERROR;
-            status = 500;
+        if(status > 0) {
+            count = status;
+            status = STERNENBLOG_OK;
         } else {
-            status = 200;
+            page_type = PAGE_TYPE_ERROR;
         }
     } else {
         // single entry is just a special index
         entries = malloc(sizeof(struct entry));
         if(entries == NULL) {
-            status = 500;
+            status = STERNENBLOG_ERROR_SYSTEM;
         } else {
             status = make_entry(BLOG_DIR, script_name, path_info, entries);
         }
 
-        if(status == 200 && entry_get_text(entries) != -1) {
+        if(status == STERNENBLOG_OK && (status = entry_get_text(entries)) == STERNENBLOG_OK) {
             count = 1;
         } else {
             page_type = PAGE_TYPE_ERROR;
@@ -172,13 +173,13 @@ int main(void) {
     }
 
     // confirm status and page_type match
-    assert(status == 200 || page_type == PAGE_TYPE_ERROR);
-    assert(page_type != PAGE_TYPE_ERROR || status != 200);
+    assert(status == STERNENBLOG_OK || page_type == PAGE_TYPE_ERROR);
+    assert(page_type != PAGE_TYPE_ERROR || status != STERNENBLOG_OK);
 
     // initial contents of data, changed in loop for PAGE_TYPE_INDEX
     struct template_data data;
     data.page_type = page_type;
-    data.status = status;
+    data.status = error_http_status(status);
     data.script_name = script_name;
     if(path_info == NULL) {
         data.path_info = "";
@@ -201,7 +202,7 @@ int main(void) {
     // render response
     switch(page_type) {
         case PAGE_TYPE_ERROR:
-            send_standard_headers(status, "text/html");
+            send_standard_headers(error_http_status(status), "text/html");
 
             template_header(data);
             template_main(data);

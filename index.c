@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/types.h>
 
+#include "error.h"
 #include "index.h"
 
 /*!
@@ -36,11 +37,11 @@ int entries_timesort_r(struct entry *a, struct entry *b) {
 
 int make_index(const char *blog_dir, char *script_name, bool get_text, struct entry *entries[]) {
     if(*entries != NULL) {
-        return -1;
+        return STERNENBLOG_ERROR_UNEXPECTED;
     }
 
     if(script_name == NULL) {
-        return -1;
+        return STERNENBLOG_ERROR_CGI;
     }
 
     size_t index_count = 0;
@@ -49,7 +50,7 @@ int make_index(const char *blog_dir, char *script_name, bool get_text, struct en
     dir = opendir(blog_dir);
 
     if(dir == NULL) {
-        return -1;
+        return error_from_errno();
     }
 
     struct dirent *ent;
@@ -58,7 +59,7 @@ int make_index(const char *blog_dir, char *script_name, bool get_text, struct en
     *entries = malloc(sizeof(struct entry) * size);
 
     if(*entries == NULL) {
-        return -1;
+        return STERNENBLOG_ERROR_SYSTEM;
     }
 
     // losely based on musl's scandir(3)
@@ -79,7 +80,7 @@ int make_index(const char *blog_dir, char *script_name, bool get_text, struct en
 
             int result = make_entry(blog_dir, script_name, path_info, &tmp_entry);
 
-            if(result == 200) {
+            if(result == STERNENBLOG_OK) {
                 // increase array size if necessary
                 if(index_count >= size) {
                     size += BASE_INDEX_SIZE;

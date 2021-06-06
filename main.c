@@ -181,11 +181,7 @@ int main(void) {
     data.page_type = page_type;
     data.status = error_http_status(status);
     data.script_name = script_name;
-    if(path_info == NULL) {
-        data.path_info = "";
-    } else {
-        data.path_info = path_info;
-    }
+    data.path_info = path_info;
 
     // confirm that we have SCRIPT_NAME and PATH_INFO unless an error occurred
     assert(data.page_type == PAGE_TYPE_ERROR ||
